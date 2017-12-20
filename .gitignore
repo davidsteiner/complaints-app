@@ -1,0 +1,10 @@
+.gym_env/
+.idea/
+*.pyc
+node_modules/
+dist/
+elm-stuff/
+yarn.lock
+*.sqlite3
+*.swo
+*.swp
