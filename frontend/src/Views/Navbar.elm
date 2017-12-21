@@ -23,8 +23,8 @@ stateToClass state =
         ""
 
 
-viewNavbar : User -> State -> Html Msg
-viewNavbar user state =
+viewNavbar : User -> State -> Bool -> Html Msg
+viewNavbar user state isLoading =
     nav [ class "navbar is-dark", attribute "role" "navigation" ]
         [ navbarBrand state
         , navbarMenu user state

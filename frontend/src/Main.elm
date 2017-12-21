@@ -2,9 +2,11 @@ module Main exposing (..)
 
 import Html exposing (div, Html, program, text)
 import Html.Attributes exposing (class, id)
+import Http
 import Json.Decode as Decode exposing (Value)
 import Navigation exposing (Location)
 import Task
+import Data.Conversation exposing (Complaint)
 import Data.User as User exposing (User, Session)
 import Page.Errored exposing (PageLoadError)
 import Page.Home as Home
@@ -14,7 +16,8 @@ import Page.NotFound as NotFound
 import Page.Register as Register
 import Ports
 import Route exposing (Route)
-import Views.ComplaintMenu as Menu
+import Task
+import Views.ComplaintMenu as ComplaintMenu
 import Views.Navbar as Navbar
 
 
@@ -24,6 +27,7 @@ init val location =
         { session = (decodeUserFromJson val)
         , pageState = Loaded initialPage
         , navbarState = False
+        , complaints = []
         }
 
 
@@ -63,6 +67,7 @@ type alias Model =
     { session : Session
     , pageState : PageState
     , navbarState : Navbar.State
+    , complaints : List Complaint
     }
 
 
@@ -74,14 +79,14 @@ view : Model -> Html Msg
 view model =
     case model.pageState of
         Loaded page ->
-            frame model.session model.navbarState (viewPage model.session page)
+            frame model.session model.navbarState (viewPage model.session page) False model.complaints
 
-        _ ->
-            Html.div [] []
+        TransitioningFrom page ->
+            frame model.session model.navbarState (viewPage model.session page) True model.complaints
 
 
-frame : Session -> Navbar.State -> Html Msg -> Html Msg
-frame session navbarState content =
+frame : Session -> Navbar.State -> Html Msg -> Bool -> List Complaint -> Html Msg
+frame session navbarState content isLoading complaints =
     case session of
         Nothing ->
             div [ id "page-frame" ]
@@ -89,11 +94,11 @@ frame session navbarState content =
 
         Just user ->
             div [ id "page-frame" ]
-                [ Navbar.viewNavbar user navbarState
+                [ Navbar.viewNavbar user navbarState isLoading
                     |> Html.map NavbarMsg
                 , div [ class "container" ]
                     [ div [ class "columns" ]
-                        [ Menu.viewMenu []
+                        [ ComplaintMenu.viewMenu complaints
                         , div [ class "column is-9" ] [ content ]
                         ]
                     ]
@@ -139,6 +144,7 @@ type Msg
     | NewComplaintMsg NewComplaint.Msg
     | SetUser (Maybe User)
     | SetRoute (Maybe Route)
+    | ComplaintListUpdated (Result Http.Error (List Complaint))
 
 
 
@@ -209,6 +215,13 @@ update msg model =
                 in
                     ( { model | navbarState = newNavbarState }, Cmd.none )
 
+            ( ComplaintListUpdated (Ok complaints), _ ) ->
+                ( { model | complaints = complaints }, Cmd.none )
+
+            ( ComplaintListUpdated (Err err), _ ) ->
+                ( { model | complaints = [] }, Cmd.none )
+                    |> Debug.log (toString err)
+
             ( _, _ ) ->
                 ( model, Cmd.none )
 
@@ -253,7 +266,7 @@ setAuthenticatedRoute route model user =
             ( model, Cmd.none )
 
         Route.NewComplaint ->
-            ( { model | pageState = Loaded (NewComplaint (NewComplaint.initialModel user)) }, Cmd.none )
+            ( { model | pageState = Loaded (NewComplaint (NewComplaint.initialModel user)) }, Task.attempt ComplaintListUpdated (ComplaintMenu.init user) )
 
 
 setUnauthenticatedRoute : Route -> Model -> ( Model, Cmd Msg )

@@ -1,29 +1,46 @@
-module Data.Conversation exposing (decoder, Conversation)
+module Data.Conversation exposing (complaintListDecoder, decoder, Complaint, Conversation)
 
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline as Pipeline exposing (decode, optional, required)
 
 
 type alias Conversation =
-    { conversationId : String
-    , subject : String
+    { complaint : Complaint
     , messages : List ConversationMessage
+    }
+
+
+type alias Complaint =
+    { subject : String
+    , id : Int
+    , owner : String
     }
 
 
 type alias ConversationMessage =
     { sender : String
     , message : String
-    , conversationId : String
     }
 
 
 decoder : Decoder Conversation
 decoder =
     decode Conversation
-        |> required "subject" Decode.string
-        |> required "conversationId" Decode.string
+        |> required "complaint" complaintDecoder
         |> required "messages" (Decode.list messageDecoder)
+
+
+complaintDecoder : Decoder Complaint
+complaintDecoder =
+    decode Complaint
+        |> required "subject" Decode.string
+        |> required "id" Decode.int
+        |> required "owner" Decode.string
+
+
+complaintListDecoder : Decoder (List Complaint)
+complaintListDecoder =
+    Decode.list complaintDecoder
 
 
 messageDecoder : Decoder ConversationMessage
@@ -31,4 +48,3 @@ messageDecoder =
     decode ConversationMessage
         |> required "sender" Decode.string
         |> required "message" Decode.string
-        |> required "conversationId" Decode.string

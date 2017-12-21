@@ -1,7 +1,7 @@
 module Request.Complaint exposing (..)
 
 import Http
-import HttpBuilder exposing (RequestBuilder, post, toRequest, withBody, withExpect)
+import HttpBuilder exposing (get, RequestBuilder, post, toRequest, withBody, withExpect)
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Data.Conversation as Conversation
@@ -24,3 +24,12 @@ newComplaint { subject, message, user } =
             |> withBody (Http.jsonBody complaint)
             |> withExpect (Http.expectJson Conversation.decoder)
             |> toRequest
+
+
+complaintList : User -> Http.Request (List Conversation.Complaint)
+complaintList user =
+    apiUrl "/complaints/"
+        |> get
+        |> withAuthorisation user.token
+        |> withExpect (Http.expectJson Conversation.complaintListDecoder)
+        |> toRequest
