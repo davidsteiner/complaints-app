@@ -1,9 +1,9 @@
 module Page.Conversation exposing (..)
 
 import Data.Conversation exposing (ConversationMessage)
-import Data.User exposing (Session, User)
-import Html exposing (button, div, form, Html, li, p, text, ul)
-import Html.Attributes exposing (class)
+import Data.User exposing (Session, User, usernameToString)
+import Html exposing (button, div, form, h2, Html, li, p, section, text, ul)
+import Html.Attributes exposing (class, style)
 import Html.Events exposing (onSubmit)
 import Http
 import Request.Complaint exposing (conversation)
@@ -36,15 +36,30 @@ initialModel conversation user =
 
 view : Session -> Model -> Html Msg
 view session model =
-    div []
-        [ viewMessageTextArea session model
-        , text (model.conversation.complaint.subject)
-        , viewMessages model.conversation.messages
+    case session of
+        Just user ->
+            div []
+                [ viewSubjectHero (model.conversation.complaint.subject)
+                , viewMessageTextArea model
+                , viewMessages user model.conversation.messages
+                ]
+
+        Nothing ->
+            div [] []
+
+
+viewSubjectHero : String -> Html Msg
+viewSubjectHero subject =
+    section [ class "hero is-dark welcome is-small" ]
+        [ div [ class "hero-body" ]
+            [ div [ class "container" ]
+                [ h2 [] [ text subject ] ]
+            ]
         ]
 
 
-viewMessageTextArea : Session -> Model -> Html Msg
-viewMessageTextArea _ model =
+viewMessageTextArea : Model -> Html Msg
+viewMessageTextArea model =
     form [ class "form-group", onSubmit SubmitForm ]
         [ viewTextArea { label_ = "", val = model.newMessage, msg = SetMessage }
         , submitButton
@@ -55,20 +70,30 @@ submitButton : Html Msg
 submitButton =
     div [ class "field" ]
         [ p [ class "control" ]
-            [ button [ class "button is-primary" ] [ text "Kuldes" ] ]
+            [ button [ class "button is-primary" ] [ text "Valasz" ] ]
         ]
 
 
-viewMessages : List ConversationMessage -> Html Msg
-viewMessages messages =
+viewMessages : User -> List ConversationMessage -> Html Msg
+viewMessages user messages =
     messages
-        |> List.map viewMessage
+        |> List.map (viewMessage user)
         |> ul []
 
 
-viewMessage : ConversationMessage -> Html msg
-viewMessage message =
-    li [] [ text (message.sender ++ ": " ++ message.text) ]
+viewMessage : User -> ConversationMessage -> Html msg
+viewMessage user message =
+    let
+        ( msgClass, margin ) =
+            if usernameToString user.username == message.sender then
+                ( "is-dark", "margin-right" )
+            else
+                ( "is-success", "margin-left" )
+    in
+        li []
+            [ div [ class ("message " ++ msgClass), style [ ( "margin-top", "10px" ), ( margin, "50px" ) ] ]
+                [ div [ class "message-body" ] [ text message.text ] ]
+            ]
 
 
 update : Msg -> Model -> ( ( Model, Cmd Msg ), ExternalMsg )

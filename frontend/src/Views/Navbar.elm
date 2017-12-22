@@ -1,7 +1,7 @@
 module Views.Navbar exposing (Msg, State, viewNavbar)
 
 import Html exposing (a, button, div, Html, nav, span, text)
-import Html.Attributes exposing (attribute, class, id)
+import Html.Attributes exposing (attribute, class, id, style)
 import Html.Events exposing (onClick)
 import Data.User exposing (User, usernameToString)
 import Route exposing (href, Route)
@@ -25,7 +25,7 @@ stateToClass state =
 
 viewNavbar : User -> State -> Bool -> Html Msg
 viewNavbar user state isLoading =
-    nav [ class "navbar is-dark", attribute "role" "navigation" ]
+    nav [ class "navbar is-dark", attribute "role" "navigation", style [ ( "margin-bottom", "20px" ) ] ]
         [ navbarBrand state
         , navbarMenu user state
         ]
