@@ -127,6 +127,7 @@ viewPage session page =
 
         Conversation subModel ->
             Conversation.view session subModel
+                |> Html.map ConversationMsg
 
         NotFound ->
             NotFound.view
@@ -147,10 +148,11 @@ type Msg
     | RegisterMsg Register.Msg
     | NavbarMsg Navbar.Msg
     | NewComplaintMsg NewComplaint.Msg
+    | ConversationMsg Conversation.Msg
     | SetUser (Maybe User)
     | SetRoute (Maybe Route)
     | ComplaintListUpdated (Result Http.Error (List Complaint))
-    | ConversationLoaded (Result Http.Error Conversation.Model)
+    | ConversationLoaded User (Result Http.Error Data.Conversation.Conversation)
 
 
 
@@ -214,6 +216,13 @@ update msg model =
                 in
                     ( { newModel | pageState = Loaded (NewComplaint pageModel) }, Cmd.map NewComplaintMsg cmd )
 
+            ( ConversationMsg subMsg, Conversation subModel ) ->
+                let
+                    ( ( pageModel, cmd ), msgFromPage ) =
+                        Conversation.update subMsg subModel
+                in
+                    ( { model | pageState = Loaded (Conversation pageModel) }, Cmd.map ConversationMsg cmd )
+
             ( NavbarMsg _, _ ) ->
                 let
                     newNavbarState =
@@ -228,10 +237,14 @@ update msg model =
                 ( { model | complaints = [] }, Cmd.none )
                     |> Debug.log (toString err)
 
-            ( ConversationLoaded (Ok conversation), _ ) ->
-                ( { model | pageState = Loaded (Conversation conversation) }, Cmd.none )
+            ( ConversationLoaded user (Ok conversation), _ ) ->
+                let
+                    subModel =
+                        Conversation.initialModel conversation user
+                in
+                    ( { model | pageState = Loaded (Conversation subModel) }, Cmd.none )
 
-            ( ConversationLoaded (Err err), _ ) ->
+            ( ConversationLoaded _ (Err err), _ ) ->
                 ( model, Cmd.none )
                     |> Debug.log (toString err)
 
@@ -284,7 +297,7 @@ setAuthenticatedRoute route model user =
         Route.Conversation complaintId ->
             let
                 cmd =
-                    Cmd.batch [ Task.attempt ConversationLoaded (Conversation.init user complaintId), Task.attempt ComplaintListUpdated (ComplaintMenu.init user) ]
+                    Cmd.batch [ Task.attempt (ConversationLoaded user) (Conversation.init user complaintId), Task.attempt ComplaintListUpdated (ComplaintMenu.init user) ]
             in
                 ( model, cmd )
 

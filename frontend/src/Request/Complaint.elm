@@ -1,4 +1,4 @@
-module Request.Complaint exposing (..)
+module Request.Complaint exposing (complaintList, conversation, newComplaint, sendMessage)
 
 import Http
 import HttpBuilder exposing (get, RequestBuilder, post, toRequest, withBody, withExpect)
@@ -23,6 +23,23 @@ newComplaint { subject, message, user } =
             |> withAuthorisation user.token
             |> withBody (Http.jsonBody complaint)
             |> withExpect (Http.expectJson Conversation.complaintDecoder)
+            |> toRequest
+
+
+sendMessage : User -> String -> Int -> Http.Request Conversation.Conversation
+sendMessage user text complaintId =
+    let
+        message =
+            Encode.object
+                [ ( "text", Encode.string text )
+                , ( "complaintId", Encode.int complaintId )
+                ]
+    in
+        apiUrl "/send-message/"
+            |> post
+            |> withAuthorisation user.token
+            |> withBody (Http.jsonBody message)
+            |> withExpect (Http.expectJson Conversation.decoder)
             |> toRequest
 
 

@@ -33,9 +33,32 @@ class ConversationView(APIView):
     def get(self, request, conversation_id, format=None):
         complaint = Complaint.objects.get(id=int(conversation_id))
         if complaint and complaint.owner == request.user:
-            messages = Message.objects.filter(complaint=complaint)
-            message_serializer = MessageSerializer(messages, many=True)
-            complaint_serializer = ComplaintSerializer(complaint)
-            response = {'complaint': complaint_serializer.data, 'messages': message_serializer.data}
-            return Response(response, status=status.HTTP_200_OK)
+            return Response(get_serialized_conversation(complaint), status=status.HTTP_200_OK)
         return Response([], status=status.HTTP_404_NOT_FOUND)
+
+
+def get_serialized_conversation(complaint):
+    messages = Message.objects.filter(complaint=complaint)
+    message_serializer = MessageSerializer(messages, many=True)
+    complaint_serializer = ComplaintSerializer(complaint)
+    return {'complaint': complaint_serializer.data, 'messages': message_serializer.data}
+
+
+class SendMessageView(APIView):
+
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def post(self, request, format=None):
+        complaint_id = request.data.get('complaint_id')
+        message_text = request.data.get('text')
+
+        if not complaint_id or not message_text:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        complaint = Complaint.objects.get(id=int(complaint_id))
+        if complaint and complaint.owner == request.user:
+            msg = Message(sender=request.user, text=message_text, complaint=complaint)
+            msg.save()
+            return Response(get_serialized_conversation(complaint), status=status.HTTP_200_OK)
+
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
