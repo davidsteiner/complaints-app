@@ -14,7 +14,7 @@ class ComplaintView(APIView):
             complaint = serialized.save(owner=request.user)
             msg = Message(sender=request.user, text=request.data['message'], complaint=complaint)
             msg.save()
-            return Response({'complaint': serialized.data}, status=status.HTTP_200_OK)
+            return Response(serialized.data, status=status.HTTP_200_OK)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -25,3 +25,17 @@ class AllComplaintsView(APIView):
         complaints = Complaint.objects.filter(owner=request.user)
         serializer = ComplaintSerializer(complaints, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ConversationView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, conversation_id, format=None):
+        complaint = Complaint.objects.get(id=int(conversation_id))
+        if complaint and complaint.owner == request.user:
+            messages = Message.objects.filter(complaint=complaint)
+            message_serializer = MessageSerializer(messages, many=True)
+            complaint_serializer = ComplaintSerializer(complaint)
+            response = {'complaint': complaint_serializer.data, 'messages': message_serializer.data}
+            return Response(response, status=status.HTTP_200_OK)
+        return Response([], status=status.HTTP_404_NOT_FOUND)

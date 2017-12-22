@@ -39,6 +39,7 @@ class ComplaintSerializer(serializers.ModelSerializer):
 
 
 class MessageSerializer(serializers.ModelSerializer):
+    sender = serializers.StringRelatedField(read_only=True)
 
     def create(self, validated_data):
         complaint = Complaint.objects.get(pk=validated_data['complaint'])
@@ -58,4 +59,4 @@ class MessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Message
-        fields = ('subject', )
+        fields = ('text', 'sender')

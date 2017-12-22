@@ -1,12 +1,13 @@
 module Page.NewComplaint exposing (ExternalMsg(..), initialModel, Model, Msg, update, view)
 
-import Data.Conversation exposing (Conversation)
+import Data.Conversation exposing (Complaint)
 import Data.User exposing (Session, User, usernameToString)
 import Html exposing (button, div, form, Html, label, p, text, textarea)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onInput, onSubmit)
 import Http
 import Request.Complaint
+import Route
 import Views.Input exposing (viewTextField, viewTextArea)
 
 
@@ -14,7 +15,7 @@ type Msg
     = SubmitForm
     | SetSubject String
     | SetMessage String
-    | ComplaintRegistered (Result Http.Error Conversation)
+    | ComplaintRegistered (Result Http.Error Complaint)
 
 
 type alias Error =
@@ -101,8 +102,8 @@ update msg model =
                 )
 
         -- Login succeeded
-        ComplaintRegistered (Ok conversation) ->
-            ( ( model, Cmd.none )
+        ComplaintRegistered (Ok complaint) ->
+            ( ( model, Route.modifyUrl (Route.Conversation complaint.id) )
             , NoOp
             )
 

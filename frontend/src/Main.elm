@@ -8,6 +8,7 @@ import Navigation exposing (Location)
 import Task
 import Data.Conversation exposing (Complaint)
 import Data.User as User exposing (User, Session)
+import Page.Conversation as Conversation
 import Page.Errored exposing (PageLoadError)
 import Page.Home as Home
 import Page.Login as Login
@@ -56,6 +57,7 @@ type Page
     | Errored PageLoadError
     | NotFound
     | NewComplaint NewComplaint.Model
+    | Conversation Conversation.Model
 
 
 type PageState
@@ -123,6 +125,9 @@ viewPage session page =
             NewComplaint.view session subModel
                 |> Html.map NewComplaintMsg
 
+        Conversation subModel ->
+            Conversation.view session subModel
+
         NotFound ->
             NotFound.view
 
@@ -145,6 +150,7 @@ type Msg
     | SetUser (Maybe User)
     | SetRoute (Maybe Route)
     | ComplaintListUpdated (Result Http.Error (List Complaint))
+    | ConversationLoaded (Result Http.Error Conversation.Model)
 
 
 
@@ -222,6 +228,13 @@ update msg model =
                 ( { model | complaints = [] }, Cmd.none )
                     |> Debug.log (toString err)
 
+            ( ConversationLoaded (Ok conversation), _ ) ->
+                ( { model | pageState = Loaded (Conversation conversation) }, Cmd.none )
+
+            ( ConversationLoaded (Err err), _ ) ->
+                ( model, Cmd.none )
+                    |> Debug.log (toString err)
+
             ( _, _ ) ->
                 ( model, Cmd.none )
 
@@ -256,7 +269,7 @@ setAuthenticatedRoute route model user =
             ( model, Cmd.none )
 
         Route.Home ->
-            ( { model | pageState = Loaded Home }, Cmd.none )
+            ( { model | pageState = Loaded Home }, Task.attempt ComplaintListUpdated (ComplaintMenu.init user) )
 
         Route.Logout ->
             -- Set session to nothing both in the model and in the local storage and redirect to Home
@@ -268,6 +281,13 @@ setAuthenticatedRoute route model user =
         Route.NewComplaint ->
             ( { model | pageState = Loaded (NewComplaint (NewComplaint.initialModel user)) }, Task.attempt ComplaintListUpdated (ComplaintMenu.init user) )
 
+        Route.Conversation complaintId ->
+            let
+                cmd =
+                    Cmd.batch [ Task.attempt ConversationLoaded (Conversation.init user complaintId), Task.attempt ComplaintListUpdated (ComplaintMenu.init user) ]
+            in
+                ( model, cmd )
+
 
 setUnauthenticatedRoute : Route -> Model -> ( Model, Cmd Msg )
 setUnauthenticatedRoute route model =
@@ -275,18 +295,11 @@ setUnauthenticatedRoute route model =
         Route.Login ->
             ( { model | pageState = Loaded (Login (Login.initialModel Nothing)) }, Cmd.none )
 
-        Route.Home ->
-            ( model, Route.modifyUrl Route.Login )
-
-        Route.Logout ->
-            -- Set session to nothing both in the model and in the local storage and redirect to Home
-            ( model, Cmd.none )
-
         Route.Register ->
             ( { model | pageState = Loaded (Register Register.initialModel) }, Cmd.none )
 
-        Route.NewComplaint ->
-            ( model, Cmd.none )
+        _ ->
+            ( model, Route.modifyUrl Route.Login )
 
 
 getPage : PageState -> Page

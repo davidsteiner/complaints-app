@@ -9,7 +9,7 @@ import Data.User as User exposing (User, withAuthorisation)
 import Request.Helpers exposing (apiUrl)
 
 
-newComplaint : { r | subject : String, message : String, user : User } -> Http.Request Conversation.Conversation
+newComplaint : { r | subject : String, message : String, user : User } -> Http.Request Conversation.Complaint
 newComplaint { subject, message, user } =
     let
         complaint =
@@ -22,7 +22,7 @@ newComplaint { subject, message, user } =
             |> post
             |> withAuthorisation user.token
             |> withBody (Http.jsonBody complaint)
-            |> withExpect (Http.expectJson Conversation.decoder)
+            |> withExpect (Http.expectJson Conversation.complaintDecoder)
             |> toRequest
 
 
@@ -32,4 +32,13 @@ complaintList user =
         |> get
         |> withAuthorisation user.token
         |> withExpect (Http.expectJson Conversation.complaintListDecoder)
+        |> toRequest
+
+
+conversation : User -> Int -> Http.Request Conversation.Conversation
+conversation user complaintId =
+    apiUrl ("/conversation/" ++ toString complaintId ++ "/")
+        |> get
+        |> withAuthorisation user.token
+        |> withExpect (Http.expectJson Conversation.decoder)
         |> toRequest

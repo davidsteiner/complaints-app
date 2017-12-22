@@ -7,7 +7,7 @@ import Html.Attributes exposing (class, id, type_, value)
 import Html.Events exposing (onInput)
 import Http
 import Request.Complaint exposing (complaintList)
-import Route exposing (href, Route(NewComplaint))
+import Route exposing (href, Route(Conversation, NewComplaint))
 import Task exposing (Task)
 
 
@@ -21,13 +21,13 @@ aside attributes children =
 
 
 viewMenu : List Complaint -> Html msg
-viewMenu convos =
+viewMenu complaints =
     div [ class "column is-3" ]
         [ aside
             [ class "menu" ]
             [ newComplaintButton
             , p [ class "menu-label" ] [ text "Complaints" ]
-            , viewConversations convos
+            , viewComplaints complaints
             ]
         ]
 
@@ -38,15 +38,15 @@ newComplaintButton =
         [ text "Panasz" ]
 
 
-viewConversation : Complaint -> Html msg
-viewConversation convo =
-    li [] [ a [] [ text convo.subject ] ]
+viewComplaint : Complaint -> Html msg
+viewComplaint complaint =
+    li [] [ a [ href (Conversation complaint.id) ] [ text complaint.subject ] ]
 
 
-viewConversations : List Complaint -> Html msg
-viewConversations convos =
-    convos
-        |> List.map viewConversation
+viewComplaints : List Complaint -> Html msg
+viewComplaints complaints =
+    complaints
+        |> List.map viewComplaint
         |> ul []
 
 

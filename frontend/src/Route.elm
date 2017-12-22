@@ -3,7 +3,7 @@ module Route exposing (Route(..), fromLocation, href, modifyUrl)
 import Html exposing (Attribute)
 import Html.Attributes as Attr
 import Navigation exposing (Location)
-import UrlParser as Url exposing ((</>), Parser, oneOf, parseHash, s, string)
+import UrlParser as Url exposing ((</>), int, Parser, oneOf, parseHash, s, string)
 import Data.User as User exposing (Username)
 
 
@@ -13,6 +13,7 @@ type Route
     | Logout
     | Register
     | NewComplaint
+    | Conversation Int
 
 
 route : Parser (Route -> a) a
@@ -23,6 +24,7 @@ route =
         , Url.map Logout (s "logout")
         , Url.map Register (s "register")
         , Url.map NewComplaint (s "new")
+        , Url.map Conversation (s "conversation" </> int)
         ]
 
 
@@ -45,6 +47,9 @@ routeToString page =
 
                 NewComplaint ->
                     [ "new" ]
+
+                Conversation conversationId ->
+                    [ "conversation", toString conversationId ]
     in
         "#/" ++ String.join "/" pieces
 
