@@ -38,7 +38,7 @@ view : Session -> Model -> Html Msg
 view session model =
     case session of
         Just user ->
-            div []
+            div [ class "box" ]
                 [ viewSubjectHero (model.conversation.complaint.subject)
                 , viewMessageTextArea model
                 , viewMessages user model.conversation.messages
@@ -70,7 +70,7 @@ submitButton : Html Msg
 submitButton =
     div [ class "field" ]
         [ p [ class "control" ]
-            [ button [ class "button is-primary" ] [ text "Valasz" ] ]
+            [ button [ class "button is-primary" ] [ text "Válasz" ] ]
         ]
 
 

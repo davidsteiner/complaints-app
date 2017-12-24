@@ -23,9 +23,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'ep@rjq)!yx--7padz_4ncm_4g=x8_d6v_&bg7#=is&^n+8ffd_'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*.david-steiner.co.uk', 'localhost*']
 
 
 REST_FRAMEWORK = {

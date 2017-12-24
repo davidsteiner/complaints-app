@@ -1,6 +1,6 @@
 module Main exposing (..)
 
-import Html exposing (div, Html, program, text)
+import Html exposing (div, Html, program, section, text)
 import Html.Attributes exposing (class, id)
 import Http
 import Json.Decode as Decode exposing (Value)
@@ -96,12 +96,14 @@ frame session navbarState content isLoading complaints =
 
         Just user ->
             div [ id "page-frame" ]
-                [ Navbar.viewNavbar user navbarState isLoading
+                [ Navbar.viewNavbar navbarState isLoading complaints
                     |> Html.map NavbarMsg
-                , div [ class "container" ]
-                    [ div [ class "columns" ]
-                        [ ComplaintMenu.viewMenu complaints
-                        , div [ class "column is-9" ] [ content ]
+                , section [ class "section" ]
+                    [ div [ class "container" ]
+                        [ div [ class "columns" ]
+                            [ ComplaintMenu.viewMenu complaints
+                            , div [ class "column is-9" ] [ content ]
+                            ]
                         ]
                     ]
                 ]

@@ -1,6 +1,7 @@
 'use strict';
 
 require('bulma/css/bulma.css');
+require('font-awesome/css/font-awesome.css');
 require('./complaint.css');
 
 // Require index.html so it gets copied to dist

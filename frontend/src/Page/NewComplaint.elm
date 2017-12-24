@@ -48,8 +48,8 @@ initialModel user =
 view : Session -> Model -> Html Msg
 view _ model =
     form [ class "form-group", onSubmit SubmitForm ]
-        [ viewTextField { id = "subject-input", label = "Targy", value = model.subject, msg = SetSubject }
-        , viewTextArea { label_ = "Panasz", val = model.message, msg = SetMessage }
+        [ viewTextField { id = "subject-input", label = "Tárgy", value = model.subject, msg = SetSubject }
+        , viewTextArea { label_ = "Panasz szövege", val = model.message, msg = SetMessage }
         , submitButton
         ]
 
@@ -58,7 +58,7 @@ submitButton : Html Msg
 submitButton =
     div [ class "field" ]
         [ p [ class "control" ]
-            [ button [ class "button is-primary" ] [ text "Kuldes" ] ]
+            [ button [ class "button is-primary" ] [ text "Küldés" ] ]
         ]
 
 
