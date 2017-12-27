@@ -26,7 +26,7 @@ viewMenu complaints =
         [ aside
             [ class "menu" ]
             [ newComplaintButton
-            , p [ class "menu-label" ] [ text "Panaszok" ]
+            , p [ class "menu-label" ] [ text "Észrevételek" ]
             , viewComplaints complaints
             ]
         ]
@@ -35,7 +35,7 @@ viewMenu complaints =
 newComplaintButton : Html msg
 newComplaintButton =
     a [ class "button is-dark is-outlined is-block is-alt is-large", href NewComplaint ]
-        [ text "Új panasz" ]
+        [ text "Új észrevételek" ]
 
 
 viewComplaint : Complaint -> Html msg

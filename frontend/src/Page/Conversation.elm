@@ -2,11 +2,12 @@ module Page.Conversation exposing (..)
 
 import Data.Conversation exposing (ConversationMessage)
 import Data.User exposing (Session, User, usernameToString)
-import Html exposing (button, div, form, h2, Html, li, p, section, text, ul)
+import Html exposing (a, br, button, div, form, h2, hr, Html, li, ol, p, section, small, span, strong, text, textarea, ul)
 import Html.Attributes exposing (class, style)
 import Html.Events exposing (onSubmit)
 import Http
 import Request.Complaint exposing (conversation)
+import Route exposing (href)
 import Task exposing (Task)
 import Views.Input exposing (viewTextArea)
 
@@ -38,7 +39,7 @@ view : Session -> Model -> Html Msg
 view session model =
     case session of
         Just user ->
-            div [ class "box" ]
+            div [ class "" ]
                 [ viewSubjectHero (model.conversation.complaint.subject)
                 , viewMessageTextArea model
                 , viewMessages user model.conversation.messages
@@ -52,15 +53,15 @@ viewSubjectHero : String -> Html Msg
 viewSubjectHero subject =
     section [ class "hero is-dark welcome is-small" ]
         [ div [ class "hero-body" ]
-            [ div [ class "container" ]
-                [ h2 [] [ text subject ] ]
+            [ span [ class "title" ] [ text subject ]
+            , backToHomeButton
             ]
         ]
 
 
 viewMessageTextArea : Model -> Html Msg
 viewMessageTextArea model =
-    form [ class "form-group", onSubmit SubmitForm ]
+    form [ class "form-group", onSubmit SubmitForm, style [ ( "margin-bottom", "20px" ) ] ]
         [ viewTextArea { label_ = "", val = model.newMessage, msg = SetMessage }
         , submitButton
         ]
@@ -74,26 +75,33 @@ submitButton =
         ]
 
 
+backToHomeButton : Html Msg
+backToHomeButton =
+    a [ class "button is-primary is-pulled-right", href Route.Home ] [ text "Vissza az észrevételekhez" ]
+
+
 viewMessages : User -> List ConversationMessage -> Html Msg
 viewMessages user messages =
-    messages
-        |> List.map (viewMessage user)
-        |> ul []
+    let
+        msgContents =
+            List.intersperse
+                (hr [] [])
+                (messages
+                    |> List.map (viewMessage user)
+                )
+    in
+        div [ class "message" ]
+            [ div [ class "message-body" ] msgContents ]
 
 
 viewMessage : User -> ConversationMessage -> Html msg
 viewMessage user message =
-    let
-        ( msgClass, margin ) =
-            if usernameToString user.username == message.sender then
-                ( "is-dark", "margin-right" )
-            else
-                ( "is-success", "margin-left" )
-    in
-        li []
-            [ div [ class ("message " ++ msgClass), style [ ( "margin-top", "10px" ), ( margin, "50px" ) ] ]
-                [ div [ class "message-body" ] [ text message.text ] ]
-            ]
+    div []
+        [ strong [] [ text message.sender ]
+        , small [] [ text " 15:24" ]
+        , br [] []
+        , text message.text
+        ]
 
 
 update : Msg -> Model -> ( ( Model, Cmd Msg ), ExternalMsg )

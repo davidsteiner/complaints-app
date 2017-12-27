@@ -49,7 +49,7 @@ view : Session -> Model -> Html Msg
 view _ model =
     form [ class "form-group", onSubmit SubmitForm ]
         [ viewTextField { id = "subject-input", label = "Tárgy", value = model.subject, msg = SetSubject }
-        , viewTextArea { label_ = "Panasz szövege", val = model.message, msg = SetMessage }
+        , viewTextArea { label_ = "Észrevétel", val = model.message, msg = SetMessage }
         , submitButton
         ]
 
