@@ -1,22 +1,25 @@
-module Page.Home exposing (view)
+module Page.Home exposing (Model, view)
 
 import Html exposing (a, Html, div, text)
 import Html.Attributes exposing (class)
+import Data.Conversation exposing (Complaint)
 import Data.User exposing (Session, usernameToString)
 import Route exposing (href)
 import Views.ComplaintMenu exposing (viewMenu)
 
 
-view : Session -> Html msg
-view session =
+type alias Model =
+    List Complaint
+
+
+view : Session -> List Complaint -> Html msg
+view session complaints =
     case session of
         Nothing ->
-            div []
-                [ text "Welcome, you are not logged in."
-                , div [] [ a [ href Route.Login ] [ text "Login Here" ] ]
-                ]
+            div [] []
 
         Just user ->
             div []
-                [ text "Home screen"
+                [ div [ class "is-hidden-desktop" ] [ viewMenu complaints ]
+                , div [ class "is-hidden-touch" ] [ text "Home screen" ]
                 ]

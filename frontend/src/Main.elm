@@ -53,7 +53,7 @@ type Page
     = Blank
     | Login Login.Model
     | Register Register.Model
-    | Home
+    | Home Home.Model
     | Errored PageLoadError
     | NotFound
     | NewComplaint NewComplaint.Model
@@ -101,7 +101,7 @@ frame session navbarState content isLoading complaints =
                 , section [ class "section" ]
                     [ div [ class "container" ]
                         [ div [ class "columns" ]
-                            [ ComplaintMenu.viewMenu complaints
+                            [ div [ class "column is-3 is-hidden-touch" ] [ ComplaintMenu.viewMenu complaints ]
                             , div [ class "column is-9" ] [ content ]
                             ]
                         ]
@@ -120,8 +120,8 @@ viewPage session page =
             Register.view session subModel
                 |> Html.map RegisterMsg
 
-        Home ->
-            Home.view session
+        Home subModel ->
+            Home.view session subModel
 
         NewComplaint subModel ->
             NewComplaint.view session subModel
@@ -284,7 +284,7 @@ setAuthenticatedRoute route model user =
             ( model, Cmd.none )
 
         Route.Home ->
-            ( { model | pageState = Loaded Home }, Task.attempt ComplaintListUpdated (ComplaintMenu.init user) )
+            ( { model | pageState = Loaded (Home model.complaints) }, Task.attempt ComplaintListUpdated (ComplaintMenu.init user) )
 
         Route.Logout ->
             -- Set session to nothing both in the model and in the local storage and redirect to Home

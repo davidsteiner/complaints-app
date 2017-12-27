@@ -22,13 +22,11 @@ aside attributes children =
 
 viewMenu : List Complaint -> Html msg
 viewMenu complaints =
-    div [ class "column is-3 is-hidden-touch" ]
-        [ aside
-            [ class "menu" ]
-            [ newComplaintButton
-            , p [ class "menu-label" ] [ text "Észrevételek" ]
-            , viewComplaints complaints
-            ]
+    aside
+        [ class "menu" ]
+        [ newComplaintButton
+        , p [ class "menu-label" ] [ text "Észrevételek" ]
+        , viewComplaints complaints
         ]
 
 
