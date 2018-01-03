@@ -87,6 +87,7 @@ viewMessages user messages =
             List.intersperse
                 (hr [] [])
                 (messages
+                    |> List.reverse
                     |> List.map (viewMessage user)
                 )
     in

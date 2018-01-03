@@ -28,7 +28,6 @@ class UserSerializer(serializers.ModelSerializer):
 
         user = User.objects.create(
             username=validated_data['username'],
-            first_name=validated_data['first_name'],
             email=validated_data['email']
         )
         user.set_password(validated_data['password'])
@@ -38,7 +37,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'email', 'password')
+        fields = ('username', 'email', 'password')
 
 
 class Register(APIView):
@@ -48,6 +47,6 @@ class Register(APIView):
         serialized = UserSerializer(data=request.data)
         if serialized.is_valid():
             serialized.save()
-            logger.warning('Replying = {}'.format(serialized.data))
+            logger.info('User registered: %s', serialized.data)
             return Response({'user': serialized.data}, status=status.HTTP_200_OK)
         return Response(status=status.HTTP_400_BAD_REQUEST)

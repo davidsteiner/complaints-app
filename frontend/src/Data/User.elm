@@ -11,7 +11,6 @@ type alias User =
     { username : Username
     , email : String
     , token : AuthToken
-    , firstName : String
     }
 
 
@@ -32,9 +31,8 @@ decoder =
     decode User
         |> required "username" usernameDecoder
         |> required "email" Decode.string
-        |> optional "token" tokenDecoder (AuthToken "")
         -- This is optional as the registration page shares this code. TODO: make this nicer
-        |> required "firstName" Decode.string
+        |> optional "token" tokenDecoder (AuthToken "")
 
 
 encode : User -> Value
@@ -42,7 +40,6 @@ encode user =
     Encode.object
         [ ( "username", encodeUsername user.username )
         , ( "token", encodeToken user.token )
-        , ( "firstName", Encode.string user.firstName )
         ]
 
 
