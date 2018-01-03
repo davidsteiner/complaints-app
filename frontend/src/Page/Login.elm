@@ -2,7 +2,7 @@ module Page.Login exposing (ExternalMsg(..), initialModel, Model, Msg(..), updat
 
 import Html exposing (a, button, div, form, Html, h2, input, label, p, section, text)
 import Html.Attributes exposing (class, for, id, type_)
-import Html.Events exposing (onInput, onSubmit)
+import Html.Events exposing (onClick, onInput, onSubmit)
 import Http
 import Data.User exposing (User, Session)
 import Request.User exposing (storeSession)
@@ -11,26 +11,21 @@ import Views.Input exposing (viewTextField, viewPasswordField)
 
 
 type alias Error =
-    ( Field, String )
+    Maybe String
 
 
 type alias Model =
-    { errors : List Error
+    { serverError : Error
     , username : String
     , password : String
     }
-
-
-type Field
-    = Form
-    | Username
-    | Password
 
 
 type Msg
     = SubmitForm
     | SetUsername String
     | SetPassword String
+    | ClearServerError
     | LoginCompleted (Result Http.Error User)
 
 
@@ -50,7 +45,7 @@ initialModel session =
                 Nothing ->
                     ""
     in
-        { errors = []
+        { serverError = Nothing
         , username = username
         , password = ""
         }
@@ -61,14 +56,9 @@ update msg model =
     case msg of
         -- Login request is submitted
         SubmitForm ->
-            case validate model of
-                [] ->
-                    ( ( { model | errors = [] }, (Http.send LoginCompleted (Request.User.login model)) )
-                    , NoOp
-                    )
-
-                errors ->
-                    ( ( { model | errors = errors }, Cmd.none ), NoOp )
+            ( ( { model | serverError = Nothing }, (Http.send LoginCompleted (Request.User.login model)) )
+            , NoOp
+            )
 
         -- Email field changed
         SetUsername name ->
@@ -81,15 +71,15 @@ update msg model =
         -- Login failed with error
         LoginCompleted (Err error) ->
             let
-                errorMessages =
+                errorMessage =
                     case error of
                         Http.BadStatus response ->
-                            [ (response.body |> Debug.log "bad response") ]
+                            "Hibás felhasználónév vagy jelszó"
 
                         _ ->
-                            [ ("Unable to process Login. Reason: " ++ (toString error)) |> Debug.log "undefined resp" ]
+                            "Váratlan hiba a bejelentkezésben"
             in
-                ( ( { model | errors = List.map (\errorMessage -> ( Form, errorMessage )) errorMessages }
+                ( ( { model | serverError = Just errorMessage }
                   , Cmd.none
                   )
                 , NoOp
@@ -105,6 +95,11 @@ update msg model =
                 , SetUser user
                 )
 
+        ClearServerError ->
+            ( ( { model | serverError = Nothing }, Cmd.none )
+            , NoOp
+            )
+
 
 view : Session -> Model -> Html Msg
 view session model =
@@ -118,12 +113,26 @@ view session model =
                 [ div [ class "hero-body" ] [ viewHero model ] ]
 
 
+viewServerError : Model -> Html Msg
+viewServerError model =
+    case model.serverError of
+        Nothing ->
+            div [] []
+
+        Just error ->
+            div [ class "notification is-danger" ]
+                [ button [ class "delete", onClick ClearServerError ] []
+                , text error
+                ]
+
+
 viewHero : Model -> Html Msg
 viewHero model =
     div [ id "login-form", class "container" ]
         [ div [ class "columns is-vcentered" ]
             [ div [ class "column is-4 is-offset-4" ]
                 [ h2 [ class "title" ] [ text "Bejelentkezés" ]
+                , viewServerError model
                 , div [ class "box" ] [ viewForm model ]
                 ]
             ]
@@ -142,12 +151,3 @@ viewForm model =
         , a [ Route.href Route.Register ]
             [ text "Még nem regisztráltál?" ]
         ]
-
-
-
--- TODO add validation for fields
-
-
-validate : Model -> List Error
-validate model =
-    []
