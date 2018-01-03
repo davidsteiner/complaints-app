@@ -2,7 +2,7 @@ module Page.NewComplaint exposing (ExternalMsg(..), initialModel, Model, Msg, up
 
 import Data.Conversation exposing (Complaint)
 import Data.User exposing (Session, User, usernameToString)
-import Html exposing (button, div, form, Html, label, p, text, textarea)
+import Html exposing (a, button, div, form, Html, label, p, text, textarea)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onInput, onSubmit)
 import Http
@@ -50,16 +50,21 @@ view _ model =
     form [ class "form-group", onSubmit SubmitForm ]
         [ viewTextField { id = "subject-input", label = "Tárgy", value = model.subject, msg = SetSubject }
         , viewTextArea { label_ = "Észrevétel", val = model.message, msg = SetMessage }
-        , submitButton
+        , div [ class "field is-grouped" ]
+            [ div [ class "control" ] [ submitButton ]
+            , div [ class "control" ] [ backToHomeButton ]
+            ]
         ]
 
 
 submitButton : Html Msg
 submitButton =
-    div [ class "field" ]
-        [ p [ class "control" ]
-            [ button [ class "button is-primary" ] [ text "Küldés" ] ]
-        ]
+    button [ class "button is-primary" ] [ text "Küldés" ]
+
+
+backToHomeButton : Html Msg
+backToHomeButton =
+    a [ class "button is-light is-pulled-right", Route.href Route.Home ] [ text "Vissza" ]
 
 
 update : Msg -> Model -> ( ( Model, Cmd Msg ), ExternalMsg )
