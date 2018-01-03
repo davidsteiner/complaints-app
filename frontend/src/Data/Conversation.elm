@@ -20,6 +20,7 @@ type alias Complaint =
 type alias ConversationMessage =
     { sender : String
     , text : String
+    , created : String
     }
 
 
@@ -48,3 +49,4 @@ messageDecoder =
     decode ConversationMessage
         |> required "sender" Decode.string
         |> required "text" Decode.string
+        |> required "created" Decode.string

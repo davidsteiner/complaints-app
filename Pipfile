@@ -11,6 +11,7 @@ django = "*"
 django-cors-headers = "*"
 djangorestframework = "*"
 djangorestframework-jwt = "*"
+babel = "*"
 
 
 [dev-packages]

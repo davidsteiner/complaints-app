@@ -98,7 +98,7 @@ viewMessage : User -> ConversationMessage -> Html msg
 viewMessage user message =
     div []
         [ strong [] [ text message.sender ]
-        , small [] [ text " 15:24" ]
+        , small [] [ text message.created ]
         , br [] []
         , text message.text
         ]
