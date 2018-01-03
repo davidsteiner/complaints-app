@@ -109,7 +109,7 @@ view session model =
             div [] [ text ("Már be vagy jelentkezve!") ]
 
         Nothing ->
-            section [ class "hero is-fullheight is-dark is-bold" ]
+            section [ class "hero is-fullheight is-light is-bold" ]
                 [ div [ class "hero-body" ] [ viewHero model ] ]
 
 
@@ -146,7 +146,7 @@ viewForm model =
         , viewPasswordField { id = "password", label = "Jelszó", value = model.password, msg = SetPassword }
         , div [ class "field" ]
             [ div [ class "control" ]
-                [ button [ class "button is-success is-fullwidth is-large is-outlined" ] [ text "Bejelentkezés" ] ]
+                [ button [ class "button is-primary is-fullwidth is-large is-outlined" ] [ text "Bejelentkezés" ] ]
             ]
         , a [ Route.href Route.Register ]
             [ text "Még nem regisztráltál?" ]

@@ -120,7 +120,7 @@ viewServerError model =
 
 viewAnonymous : Model -> Html Msg
 viewAnonymous model =
-    section [ class "hero is-fullheight is-dark is-bold" ]
+    section [ class "hero is-fullheight is-light is-bold" ]
         [ div [ class "hero-body" ] [ viewHero model ] ]
 
 
@@ -145,7 +145,7 @@ viewForm model =
         , viewPasswordField { id = "password", label = "Jelszó", value = model.password, msg = SetPassword }
         , div [ class "field" ]
             [ div [ class "control" ]
-                [ button [ class "button is-success is-fullwidth is-large is-outlined" ] [ text "Regisztrálás" ] ]
+                [ button [ class "button is-primary is-fullwidth is-large is-outlined" ] [ text "Regisztrálás" ] ]
             ]
         , a [ Route.href Route.Login ]
             [ text "Már regisztráltál? Jelentkezz be itt." ]
