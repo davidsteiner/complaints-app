@@ -2,7 +2,7 @@ module Page.Conversation exposing (..)
 
 import Data.Conversation exposing (ConversationMessage)
 import Data.User exposing (Session, User, usernameToString)
-import Html exposing (a, br, button, div, form, h2, hr, Html, li, ol, p, section, small, span, strong, text, textarea, ul)
+import Html exposing (a, br, button, div, form, h2, hr, Html, li, ol, p, pre, section, small, span, strong, text, textarea, ul)
 import Html.Attributes exposing (class, style)
 import Html.Events exposing (onSubmit)
 import Http
@@ -98,10 +98,9 @@ viewMessages user messages =
 viewMessage : User -> ConversationMessage -> Html msg
 viewMessage user message =
     div []
-        [ strong [] [ text message.sender ]
-        , small [] [ text message.created ]
+        [ div [ class "is-pulled-right" ] [ strong [] [ text message.sender ], small [] [ text (" - " ++ message.created) ] ]
         , br [] []
-        , text message.text
+        , div [ class "content", style [ ( "white-space", "pre-wrap" ) ] ] [ text message.text ]
         ]
 
 
