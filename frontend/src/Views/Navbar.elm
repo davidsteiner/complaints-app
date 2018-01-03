@@ -24,28 +24,20 @@ viewNavbar state isLoading complaints =
         ]
 
 
-navbarMenu : State -> List Complaint -> Html Msg
-navbarMenu state complaints =
-    div [ class "navbar-menu is-active", id "navMenu" ]
-        [ navbarEnd complaints ]
-
-
-navbarEnd : List Complaint -> Html Msg
-navbarEnd complaints =
-    div [ class "navbar-end" ]
-        [ logoutLink ]
-
-
 logoutLink : Html Msg
 logoutLink =
-    a [ class "navbar-item is-pulled-right", href Route.Logout ]
-        [ span [ class "icon" ] [ i [ class "fa fa-sign-out" ] [] ] ]
+    a [ class "navbar-item is-right", href Route.Logout ]
+        [ span [ class "icon" ] [ i [ class "fa fa-sign-out" ] [] ]
+        , text "Kijelentkezés"
+        ]
 
 
 homeLink : Html Msg
 homeLink =
     a [ class "navbar-item", href Route.Home ]
-        [ span [ class "icon" ] [ i [ class "fa fa-home" ] [] ] ]
+        [ span [ class "icon" ] [ i [ class "fa fa-home" ] [] ]
+        , text "Kezdőlap"
+        ]
 
 
 navbarBrand : Html Msg

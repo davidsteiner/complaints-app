@@ -33,7 +33,7 @@ viewMenu complaints =
 newComplaintButton : Html msg
 newComplaintButton =
     a [ class "button is-dark is-outlined is-block is-alt is-large", href NewComplaint ]
-        [ text "Új észrevételek" ]
+        [ text "Új észrevétel" ]
 
 
 viewComplaint : Complaint -> Html msg
