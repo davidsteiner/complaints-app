@@ -1,4 +1,4 @@
-.gym_env/
+.ym_env/
 .idea/
 *.pyc
 node_modules/
@@ -8,3 +8,6 @@ yarn.lock
 *.sqlite3
 *.swo
 *.swp
+**/settings.py
+Pipfile.lock
+api/complaints/migrations/*
