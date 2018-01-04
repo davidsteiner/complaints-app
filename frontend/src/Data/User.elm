@@ -1,15 +1,16 @@
-module Data.User exposing (Session, User, Username, usernameToString, usernameParser, decoder, encode, withAuthorisation)
+module Data.User exposing (AuthToken(..), Session, User, Username, tokenToUser, usernameToString, usernameParser, usernameDecoder, tokenDecoder, decoder, encode, withAuthorisation)
 
 import HttpBuilder exposing (RequestBuilder, withHeader)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline as Pipeline exposing (decode, optional, required)
 import Json.Encode as Encode exposing (Value)
+import Jwt exposing (decodeToken)
 import UrlParser
 
 
 type alias User =
     { username : Username
-    , email : String
+    , exp : Int
     , token : AuthToken
     }
 
@@ -26,12 +27,21 @@ type AuthToken
     = AuthToken String
 
 
+tokenToUser : AuthToken -> Maybe User
+tokenToUser ((AuthToken tokenStr) as token) =
+    case decodeToken decoder tokenStr of
+        Err _ ->
+            Nothing
+
+        Ok user ->
+            Just { user | token = token }
+
+
 decoder : Decoder User
 decoder =
     decode User
         |> required "username" usernameDecoder
-        |> required "email" Decode.string
-        -- This is optional as the registration page shares this code. TODO: make this nicer
+        |> required "exp" Decode.int
         |> optional "token" tokenDecoder (AuthToken "")
 
 
@@ -39,6 +49,7 @@ encode : User -> Value
 encode user =
     Encode.object
         [ ( "username", encodeUsername user.username )
+        , ( "exp", Encode.int user.exp )
         , ( "token", encodeToken user.token )
         ]
 

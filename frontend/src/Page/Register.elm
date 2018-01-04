@@ -4,7 +4,7 @@ import Html exposing (a, button, div, form, Html, h2, input, label, section, tex
 import Html.Attributes exposing (attribute, class, for, id, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Http
-import Data.User as User exposing (User, Session)
+import Data.User as User exposing (Username, Session)
 import Request.User exposing (storeSession)
 import Route
 import Views.Input exposing (viewEmailField, viewPasswordField, viewTextField)
@@ -28,12 +28,12 @@ type Msg
     | SetPassword String
     | SetEmail String
     | ClearServerError
-    | RegisterCompleted (Result Http.Error User)
+    | RegisterCompleted (Result Http.Error Username)
 
 
 type ExternalMsg
     = NoOp
-    | RedirectLogin User
+    | RedirectLogin Username
 
 
 initialModel : Model

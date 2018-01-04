@@ -7,7 +7,7 @@ import Json.Decode as Decode exposing (Value)
 import Navigation exposing (Location)
 import Task
 import Data.Conversation exposing (Complaint)
-import Data.User as User exposing (User, Session)
+import Data.User as User exposing (User, Session, tokenToUser)
 import Page.Conversation as Conversation
 import Page.Errored exposing (PageLoadError)
 import Page.Home as Home
@@ -186,8 +186,8 @@ update msg model =
                             Login.NoOp ->
                                 model
 
-                            Login.SetUser user ->
-                                { model | session = Just user }
+                            Login.SetToken token ->
+                                { model | session = tokenToUser token }
                 in
                     ( { newModel | pageState = Loaded (Login pageModel) }, Cmd.map LoginMsg cmd )
 

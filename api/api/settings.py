@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.0/ref/settings/
 """
 
+import datetime
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -25,7 +26,7 @@ SECRET_KEY = 'ep@rjq)!yx--7padz_4ncm_4g=x8_d6v_&bg7#=is&^n+8ffd_'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['*.david-steiner.co.uk', 'localhost*']
+ALLOWED_HOSTS = ['*.david-steiner.co.uk', 'david-steiner.co.uk', 'localhost']
 
 
 REST_FRAMEWORK = {
@@ -64,7 +65,8 @@ INSTALLED_APPS = [
 CORS_ORIGIN_ALLOW_ALL = True
 
 JWT_AUTH = {
-    'JWT_RESPONSE_PAYLOAD_HANDLER': 'login_jwt.views.jwt_response_payload_handler'
+    'JWT_ALLOW_REFRESH': True,
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=300),
 }
 
 MIDDLEWARE = [

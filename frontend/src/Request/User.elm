@@ -3,7 +3,7 @@ module Request.User exposing (login, register, storeSession)
 import Http
 import Json.Decode as Decode
 import Json.Encode as Encode
-import Data.User as User exposing (User)
+import Data.User as User exposing (User, Username)
 import Request.Helpers exposing (apiUrl)
 import Ports
 
@@ -16,7 +16,7 @@ storeSession user =
         |> Ports.storeSession
 
 
-login : { r | username : String, password : String } -> Http.Request User
+login : { r | username : String, password : String } -> Http.Request User.AuthToken
 login { username, password } =
     let
         user =
@@ -28,11 +28,11 @@ login { username, password } =
         body =
             Http.jsonBody user
     in
-        Decode.field "user" User.decoder
+        Decode.field "token" User.tokenDecoder
             |> Http.post (apiUrl "/api-token-auth/") body
 
 
-register : { r | username : String, password : String, email : String } -> Http.Request User
+register : { r | username : String, password : String, email : String } -> Http.Request Username
 register { username, password, email } =
     let
         user =
@@ -46,5 +46,5 @@ register { username, password, email } =
         body =
             Http.jsonBody user
     in
-        Decode.field "user" User.decoder
+        Decode.field "username" User.usernameDecoder
             |> Http.post (apiUrl "/register/") body

@@ -9,20 +9,10 @@ from rest_framework.views import APIView
 logger = logging.getLogger(__name__)
 
 
-def jwt_response_payload_handler(token, user=None, request=None):
-    return {
-        'user': {
-            'token': token,
-            'username': user.username,
-            'firstName': user.first_name,
-            'email': user.email
-        }
-    }
-
-
 class UserSerializer(serializers.ModelSerializer):
 
     password = serializers.CharField(write_only=True)
+    email = serializers.EmailField(write_only=True, allow_blank=True)
 
     def create(self, validated_data):
 
@@ -48,5 +38,5 @@ class Register(APIView):
         if serialized.is_valid():
             serialized.save()
             logger.info('User registered: %s', serialized.data)
-            return Response({'user': serialized.data}, status=status.HTTP_200_OK)
+            return Response(serialized.data, status=status.HTTP_200_OK)
         return Response(status=status.HTTP_400_BAD_REQUEST)

@@ -4,7 +4,7 @@ import Html exposing (a, button, div, form, Html, h2, input, label, p, section, 
 import Html.Attributes exposing (class, for, id, type_)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Http
-import Data.User exposing (User, Session)
+import Data.User exposing (AuthToken, User, Username, Session)
 import Request.User exposing (storeSession)
 import Route
 import Views.Input exposing (viewTextField, viewPasswordField)
@@ -26,27 +26,27 @@ type Msg
     | SetUsername String
     | SetPassword String
     | ClearServerError
-    | LoginCompleted (Result Http.Error User)
+    | LoginCompleted (Result Http.Error AuthToken)
 
 
 type ExternalMsg
     = NoOp
-    | SetUser User
+    | SetToken AuthToken
 
 
-initialModel : Session -> Model
-initialModel session =
+initialModel : Maybe Username -> Model
+initialModel maybeName =
     let
-        username =
-            case session of
-                Just user ->
-                    Data.User.usernameToString user.username
+        usernameString =
+            case maybeName of
+                Just username ->
+                    Data.User.usernameToString username
 
                 Nothing ->
                     ""
     in
         { serverError = Nothing
-        , username = username
+        , username = usernameString
         , password = ""
         }
 
@@ -86,14 +86,10 @@ update msg model =
                 )
 
         -- Login succeeded
-        LoginCompleted (Ok user) ->
-            let
-                _ =
-                    Debug.log "Login completed" (Data.User.usernameToString user.username)
-            in
-                ( ( model, Cmd.batch [ storeSession user, Route.modifyUrl Route.Home ] )
-                , SetUser user
-                )
+        LoginCompleted (Ok token) ->
+            ( ( model, Route.modifyUrl Route.Home )
+            , SetToken token
+            )
 
         ClearServerError ->
             ( ( { model | serverError = Nothing }, Cmd.none )
