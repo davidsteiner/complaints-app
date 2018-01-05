@@ -31,10 +31,17 @@ class ConversationView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request, conversation_id, format=None):
-        complaint = Complaint.objects.get(id=int(conversation_id))
-        if request.user.is_staff or (complaint and complaint.owner == request.user):
-            return Response(get_serialized_conversation(complaint), status=status.HTTP_200_OK)
-        return Response([], status=status.HTTP_404_NOT_FOUND)
+        try:
+            complaint = Complaint.objects.get(id=int(conversation_id))
+
+            if request.user.is_staff or (complaint and complaint.owner == request.user):
+                return Response(get_serialized_conversation(complaint), status=status.HTTP_200_OK)
+            else:
+                return Response({'detail': 'You have no permission to view this conversation.'},
+                                status=status.HTTP_401_UNAUTHORIZED)
+
+        except Complaint.DoesNotExist:
+            return Response([], status=status.HTTP_404_NOT_FOUND)
 
 
 def get_serialized_conversation(complaint):

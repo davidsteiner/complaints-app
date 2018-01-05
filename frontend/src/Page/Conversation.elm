@@ -144,10 +144,9 @@ update msg model =
             )
 
 
-init : User -> Int -> Task Http.Error Data.Conversation.Conversation
+init : User -> Int -> Http.Request Data.Conversation.Conversation
 init user complaintId =
     conversation user complaintId
-        |> Http.toTask
 
 
 validate : Model -> List String

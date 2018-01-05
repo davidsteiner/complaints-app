@@ -284,7 +284,7 @@ setAuthenticatedRoute route model user =
             ( model, Cmd.none )
 
         Route.Home ->
-            ( { model | pageState = Loaded (Home model.complaints) }, Task.attempt ComplaintListUpdated (ComplaintMenu.init user) )
+            ( { model | pageState = Loaded (Home model.complaints) }, Http.send ComplaintListUpdated (ComplaintMenu.init user) )
 
         Route.Logout ->
             -- Set session to nothing both in the model and in the local storage and redirect to Home
@@ -294,12 +294,12 @@ setAuthenticatedRoute route model user =
             ( model, Cmd.none )
 
         Route.NewComplaint ->
-            ( { model | pageState = Loaded (NewComplaint (NewComplaint.initialModel user)) }, Task.attempt ComplaintListUpdated (ComplaintMenu.init user) )
+            ( { model | pageState = Loaded (NewComplaint (NewComplaint.initialModel user)) }, Http.send ComplaintListUpdated (ComplaintMenu.init user) )
 
         Route.Conversation complaintId ->
             let
                 cmd =
-                    Cmd.batch [ Task.attempt (ConversationLoaded user) (Conversation.init user complaintId), Task.attempt ComplaintListUpdated (ComplaintMenu.init user) ]
+                    Cmd.batch [ Http.send (ConversationLoaded user) (Conversation.init user complaintId), Http.send ComplaintListUpdated (ComplaintMenu.init user) ]
             in
                 ( model, cmd )
 

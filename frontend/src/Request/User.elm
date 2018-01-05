@@ -18,7 +18,7 @@ storeSession session =
                 |> Ports.storeSession
 
         Nothing ->
-            Cmd.none
+            Ports.storeSession Nothing
 
 
 login : { r | username : String, password : String } -> Http.Request User.AuthToken

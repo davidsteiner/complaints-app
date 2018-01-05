@@ -48,7 +48,6 @@ viewComplaints complaints =
         |> ul []
 
 
-init : User -> Task Http.Error (List Complaint)
+init : User -> Http.Request (List Complaint)
 init user =
     complaintList user
-        |> Http.toTask
