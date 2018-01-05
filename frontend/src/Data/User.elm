@@ -1,4 +1,4 @@
-module Data.User exposing (AuthToken(..), Session, User, Username, tokenToUser, usernameToString, usernameParser, usernameDecoder, tokenDecoder, decoder, encode, withAuthorisation)
+module Data.User exposing (AuthToken(..), Session, User, Username, tokenToUser, tokenToString, usernameToString, usernameParser, usernameDecoder, tokenDecoder, decoder, encode, withAuthorisation)
 
 import HttpBuilder exposing (RequestBuilder, withHeader)
 import Json.Decode as Decode exposing (Decoder)
@@ -72,6 +72,11 @@ usernameParser =
 encodeUsername : Username -> Value
 encodeUsername (Username name) =
     Encode.string name
+
+
+tokenToString : AuthToken -> String
+tokenToString (AuthToken token) =
+    token
 
 
 tokenDecoder : Decoder AuthToken

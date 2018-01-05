@@ -4,6 +4,7 @@ import Html exposing (div, Html, program, section, text)
 import Html.Attributes exposing (class, id)
 import Http
 import Json.Decode as Decode exposing (Value)
+import Jwt exposing (JwtError)
 import Navigation exposing (Location)
 import Task
 import Data.Conversation exposing (Complaint)
@@ -16,6 +17,7 @@ import Page.NewComplaint as NewComplaint
 import Page.NotFound as NotFound
 import Page.Register as Register
 import Ports
+import Request.Helpers exposing (send)
 import Route exposing (Route)
 import Task
 import Views.ComplaintMenu as ComplaintMenu
@@ -153,8 +155,8 @@ type Msg
     | ConversationMsg Conversation.Msg
     | SetUser (Maybe User)
     | SetRoute (Maybe Route)
-    | ComplaintListUpdated (Result Http.Error (List Complaint))
-    | ConversationLoaded User (Result Http.Error Data.Conversation.Conversation)
+    | ComplaintListUpdated (Result JwtError (List Complaint))
+    | ConversationLoaded User (Result JwtError Data.Conversation.Conversation)
 
 
 
@@ -236,8 +238,14 @@ update msg model =
                 ( { model | complaints = complaints }, Cmd.none )
 
             ( ComplaintListUpdated (Err err), _ ) ->
-                ( { model | complaints = [] }, Cmd.none )
-                    |> Debug.log (toString err)
+                case err of
+                    Jwt.TokenExpired ->
+                        ( { model | session = Nothing }, Cmd.batch [ Ports.storeSession Nothing, Route.modifyUrl Route.Home ] )
+                            |> Debug.log "Logging user out as jwt has expired."
+
+                    _ ->
+                        ( { model | complaints = [] }, Cmd.none )
+                            |> Debug.log (toString err)
 
             ( ConversationLoaded user (Ok conversation), _ ) ->
                 let
@@ -247,8 +255,14 @@ update msg model =
                     ( { model | pageState = Loaded (Conversation subModel) }, Cmd.none )
 
             ( ConversationLoaded _ (Err err), _ ) ->
-                ( model, Cmd.none )
-                    |> Debug.log (toString err)
+                case err of
+                    Jwt.TokenExpired ->
+                        ( { model | session = Nothing }, Cmd.batch [ Ports.storeSession Nothing, Route.modifyUrl Route.Home ] )
+                            |> Debug.log "Logging user out as jwt has expired."
+
+                    _ ->
+                        ( model, Cmd.none )
+                            |> Debug.log (toString err)
 
             ( _, _ ) ->
                 ( model, Cmd.none )
@@ -284,7 +298,7 @@ setAuthenticatedRoute route model user =
             ( model, Cmd.none )
 
         Route.Home ->
-            ( { model | pageState = Loaded (Home model.complaints) }, Http.send ComplaintListUpdated (ComplaintMenu.init user) )
+            ( { model | pageState = Loaded (Home model.complaints) }, send user ComplaintListUpdated (ComplaintMenu.init user) )
 
         Route.Logout ->
             -- Set session to nothing both in the model and in the local storage and redirect to Home
@@ -294,12 +308,12 @@ setAuthenticatedRoute route model user =
             ( model, Cmd.none )
 
         Route.NewComplaint ->
-            ( { model | pageState = Loaded (NewComplaint (NewComplaint.initialModel user)) }, Http.send ComplaintListUpdated (ComplaintMenu.init user) )
+            ( { model | pageState = Loaded (NewComplaint (NewComplaint.initialModel user)) }, send user ComplaintListUpdated (ComplaintMenu.init user) )
 
         Route.Conversation complaintId ->
             let
                 cmd =
-                    Cmd.batch [ Http.send (ConversationLoaded user) (Conversation.init user complaintId), Http.send ComplaintListUpdated (ComplaintMenu.init user) ]
+                    Cmd.batch [ send user (ConversationLoaded user) (Conversation.init user complaintId), send user ComplaintListUpdated (ComplaintMenu.init user) ]
             in
                 ( model, cmd )
 
