@@ -4,7 +4,7 @@ import Html exposing (a, button, div, form, Html, h2, input, label, p, section, 
 import Html.Attributes exposing (class, for, id, type_)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Http
-import Data.User exposing (AuthToken, User, Username, Session)
+import Data.User exposing (AuthToken, User, Username, Session, tokenToUser)
 import Request.User exposing (storeSession)
 import Route
 import Views.Input exposing (viewTextField, viewPasswordField)
@@ -31,7 +31,7 @@ type Msg
 
 type ExternalMsg
     = NoOp
-    | SetToken AuthToken
+    | SetSession Session
 
 
 initialModel : Maybe Username -> Model
@@ -87,9 +87,13 @@ update msg model =
 
         -- Login succeeded
         LoginCompleted (Ok token) ->
-            ( ( model, Route.modifyUrl Route.Home )
-            , SetToken token
-            )
+            let
+                session =
+                    tokenToUser token
+            in
+                ( ( model, Cmd.batch [ storeSession session, Route.modifyUrl Route.Home ] )
+                , SetSession session
+                )
 
         ClearServerError ->
             ( ( { model | serverError = Nothing }, Cmd.none )

@@ -186,8 +186,8 @@ update msg model =
                             Login.NoOp ->
                                 model
 
-                            Login.SetToken token ->
-                                { model | session = tokenToUser token }
+                            Login.SetSession session ->
+                                { model | session = session }
                 in
                     ( { newModel | pageState = Loaded (Login pageModel) }, Cmd.map LoginMsg cmd )
 

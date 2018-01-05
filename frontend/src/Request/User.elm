@@ -3,17 +3,22 @@ module Request.User exposing (login, register, storeSession)
 import Http
 import Json.Decode as Decode
 import Json.Encode as Encode
-import Data.User as User exposing (User, Username)
+import Data.User as User exposing (Session, User, Username)
 import Request.Helpers exposing (apiUrl)
 import Ports
 
 
-storeSession : User -> Cmd msg
-storeSession user =
-    User.encode user
-        |> Encode.encode 0
-        |> Just
-        |> Ports.storeSession
+storeSession : Session -> Cmd msg
+storeSession session =
+    case session of
+        Just user ->
+            User.encode user
+                |> Encode.encode 0
+                |> Just
+                |> Ports.storeSession
+
+        Nothing ->
+            Cmd.none
 
 
 login : { r | username : String, password : String } -> Http.Request User.AuthToken
