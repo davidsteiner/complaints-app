@@ -6,7 +6,9 @@ import Html exposing (a, br, button, div, form, h2, hr, Html, li, ol, p, pre, se
 import Html.Attributes exposing (class, style)
 import Html.Events exposing (onSubmit)
 import Http
+import Jwt exposing (JwtError(..))
 import Request.Complaint exposing (conversation)
+import Request.Helpers exposing (send)
 import Route exposing (href)
 import Task exposing (Task)
 import Views.Input exposing (viewTextArea)
@@ -15,15 +17,19 @@ import Views.Input exposing (viewTextArea)
 type alias Model =
     { conversation : Data.Conversation.Conversation
     , newMessage : String
-    , errors : List String
+    , serverError : Error
     , user : User
     }
+
+
+type alias Error =
+    Maybe String
 
 
 type Msg
     = SetMessage String
     | SubmitForm
-    | MessageSent (Result Http.Error Data.Conversation.Conversation)
+    | MessageSent (Result JwtError Data.Conversation.Conversation)
 
 
 type ExternalMsg
@@ -32,7 +38,7 @@ type ExternalMsg
 
 initialModel : Data.Conversation.Conversation -> User -> Model
 initialModel conversation user =
-    { conversation = conversation, newMessage = "", errors = [], user = user }
+    { conversation = conversation, newMessage = "", serverError = Nothing, user = user }
 
 
 view : Session -> Model -> Html Msg
@@ -111,28 +117,29 @@ update msg model =
         SubmitForm ->
             case validate model of
                 [] ->
-                    ( ( { model | errors = [] }, (Http.send MessageSent (Request.Complaint.sendMessage model.user model.newMessage model.conversation.complaint.id)) )
+                    ( ( model, (send model.user MessageSent (Request.Complaint.sendMessage model.user model.newMessage model.conversation.complaint.id)) )
                     , NoOp
                     )
 
                 errors ->
-                    ( ( { model | errors = errors }, Cmd.none ), NoOp )
+                    -- TODO: show form validation errors on page
+                    ( ( model, Cmd.none ), NoOp )
 
         SetMessage msg ->
             ( ( { model | newMessage = msg }, Cmd.none ), NoOp )
 
-        MessageSent (Err error) ->
+        MessageSent (Err err) ->
             let
-                errorMessages =
-                    case error of
-                        Http.BadStatus response ->
-                            [ (response.body |> Debug.log "bad response") ]
+                ( error, cmd ) =
+                    case err of
+                        TokenExpired ->
+                            ( Nothing, Route.modifyUrl (Route.Logout) )
 
                         _ ->
-                            [ ("Unable to process complaint. Reason: " ++ (toString error)) |> Debug.log "undefined resp" ]
+                            ( Just ("Unable to process complaint. Reason: " ++ (toString err)), Cmd.none )
             in
-                ( ( { model | errors = errorMessages }
-                  , Cmd.none
+                ( ( { model | serverError = error }
+                  , cmd
                   )
                 , NoOp
                 )

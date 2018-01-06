@@ -149,6 +149,7 @@ viewPage session page =
 
 type Msg
     = LoginMsg Login.Msg
+    | CheckToken
     | RegisterMsg Register.Msg
     | NavbarMsg Navbar.Msg
     | NewComplaintMsg NewComplaint.Msg
@@ -293,29 +294,36 @@ setRoute maybeRoute model =
 
 setAuthenticatedRoute : Route -> Model -> User -> ( Model, Cmd Msg )
 setAuthenticatedRoute route model user =
-    case route of
-        Route.Login ->
-            ( model, Cmd.none )
+    let
+        updateComplaintListCmd =
+            send user ComplaintListUpdated (ComplaintMenu.init user)
 
-        Route.Home ->
-            ( { model | pageState = Loaded (Home model.complaints) }, send user ComplaintListUpdated (ComplaintMenu.init user) )
+        ( newModel, cmd ) =
+            case route of
+                Route.Login ->
+                    ( model, Cmd.none )
 
-        Route.Logout ->
-            -- Set session to nothing both in the model and in the local storage and redirect to Home
-            ( { model | session = Nothing }, Cmd.batch [ Ports.storeSession Nothing, Route.modifyUrl Route.Home ] )
+                Route.Home ->
+                    ( { model | pageState = Loaded (Home model.complaints) }, updateComplaintListCmd )
 
-        Route.Register ->
-            ( model, Cmd.none )
+                Route.Logout ->
+                    -- Set session to nothing both in the model and in the local storage and redirect to Home
+                    ( { model | session = Nothing }, Cmd.batch [ Ports.storeSession Nothing, Route.modifyUrl Route.Home ] )
 
-        Route.NewComplaint ->
-            ( { model | pageState = Loaded (NewComplaint (NewComplaint.initialModel user)) }, send user ComplaintListUpdated (ComplaintMenu.init user) )
+                Route.Register ->
+                    ( model, Cmd.none )
 
-        Route.Conversation complaintId ->
-            let
-                cmd =
-                    Cmd.batch [ send user (ConversationLoaded user) (Conversation.init user complaintId), send user ComplaintListUpdated (ComplaintMenu.init user) ]
-            in
-                ( model, cmd )
+                Route.NewComplaint ->
+                    ( { model | pageState = Loaded (NewComplaint (NewComplaint.initialModel user)) }, updateComplaintListCmd )
+
+                Route.Conversation complaintId ->
+                    let
+                        cmd =
+                            Cmd.batch [ send user (ConversationLoaded user) (Conversation.init user complaintId), updateComplaintListCmd ]
+                    in
+                        ( model, cmd )
+    in
+        ( newModel, Cmd.batch [ cmd ] )
 
 
 setUnauthenticatedRoute : Route -> Model -> ( Model, Cmd Msg )
