@@ -238,6 +238,9 @@ update msg model =
                 in
                     ( { model | navbarState = newNavbarState }, Cmd.none )
 
+            ( ComplaintListUpdated (Ok complaints), Home subModel ) ->
+                ( { model | complaints = complaints, pageState = Loaded (Home complaints) }, Cmd.none )
+
             ( ComplaintListUpdated (Ok complaints), _ ) ->
                 ( { model | complaints = complaints }, Cmd.none )
 
