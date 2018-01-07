@@ -18,7 +18,7 @@ import Page.NotFound as NotFound
 import Page.Register as Register
 import Ports
 import Request.Helpers exposing (send)
-import Request.User exposing (refreshToken)
+import Request.User exposing (refreshTokenCmd)
 import Route exposing (Route)
 import Task
 import Views.ComplaintMenu as ComplaintMenu
@@ -153,7 +153,6 @@ viewPage session page =
 
 type Msg
     = LoginMsg Login.Msg
-    | CheckToken
     | RegisterMsg Register.Msg
     | NavbarMsg Navbar.Msg
     | NewComplaintMsg NewComplaint.Msg
@@ -270,13 +269,19 @@ update msg model =
                             |> Debug.log (toString err)
 
             ( TokenRefreshed (Ok newToken), _ ) ->
-                case tokenToUser newToken of
+                case model.session of
                     Nothing ->
+                        -- We do not want to overwrite the session if we've already logged out for some reason
                         ( model, Cmd.none )
-                            |> Debug.log "Something went wrong with parsing the token. The token was not refreshed."
 
-                    Just user ->
-                        ( { model | session = Just user }, Ports.storeSession <| Just <| User.tokenToString user.token )
+                    Just _ ->
+                        case tokenToUser newToken of
+                            Nothing ->
+                                ( model, Cmd.none )
+                                    |> Debug.log "Something went wrong with parsing the token. The token was not refreshed."
+
+                            Just user ->
+                                ( { model | session = Just user }, Ports.storeSession <| Just <| User.tokenToString user.token )
 
             ( TokenRefreshed (Err err), _ ) ->
                 case err of
@@ -318,35 +323,35 @@ setRoute maybeRoute model =
 setAuthenticatedRoute : Route -> Model -> User -> ( Model, Cmd Msg )
 setAuthenticatedRoute route model user =
     let
+        refreshToken =
+            refreshTokenCmd user TokenRefreshed
+
         updateComplaintListCmd =
             send user ComplaintListUpdated (ComplaintMenu.init user)
-
-        ( newModel, cmd ) =
-            case route of
-                Route.Login ->
-                    ( model, Cmd.none )
-
-                Route.Home ->
-                    ( { model | pageState = Loaded (Home model.complaints) }, updateComplaintListCmd )
-
-                Route.Logout ->
-                    -- Set session to nothing both in the model and in the local storage and redirect to Home
-                    ( { model | session = Nothing }, Cmd.batch [ Ports.storeSession Nothing, Route.modifyUrl Route.Home ] )
-
-                Route.Register ->
-                    ( model, Cmd.none )
-
-                Route.NewComplaint ->
-                    ( { model | pageState = Loaded (NewComplaint (NewComplaint.initialModel user)) }, updateComplaintListCmd )
-
-                Route.Conversation complaintId ->
-                    let
-                        cmd =
-                            Cmd.batch [ send user (ConversationLoaded user) (Conversation.init user complaintId), updateComplaintListCmd ]
-                    in
-                        ( model, cmd )
     in
-        ( newModel, Cmd.batch [ cmd, send user TokenRefreshed <| refreshToken user.token ] )
+        case route of
+            Route.Login ->
+                ( model, refreshToken )
+
+            Route.Home ->
+                ( { model | pageState = Loaded (Home model.complaints) }, Cmd.batch [ updateComplaintListCmd, refreshToken ] )
+
+            Route.Logout ->
+                -- Set session to nothing both in the model and in the local storage and redirect to Home
+                ( { model | session = Nothing }, Cmd.batch [ Ports.storeSession Nothing, Route.modifyUrl Route.Home ] )
+
+            Route.Register ->
+                ( model, Cmd.none )
+
+            Route.NewComplaint ->
+                ( { model | pageState = Loaded (NewComplaint (NewComplaint.initialModel user)) }, Cmd.batch [ updateComplaintListCmd, refreshToken ] )
+
+            Route.Conversation complaintId ->
+                let
+                    cmd =
+                        Cmd.batch [ send user (ConversationLoaded user) (Conversation.init user complaintId), updateComplaintListCmd, refreshToken ]
+                in
+                    ( model, cmd )
 
 
 setUnauthenticatedRoute : Route -> Model -> ( Model, Cmd Msg )

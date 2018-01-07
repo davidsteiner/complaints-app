@@ -1,11 +1,12 @@
-module Request.User exposing (login, refreshToken, register, storeSession)
+module Request.User exposing (login, refreshTokenCmd, register, storeSession)
 
 import Http
 import HttpBuilder exposing (RequestBuilder, post, toRequest, withBody, withExpect)
 import Json.Decode as Decode
 import Json.Encode as Encode
+import Jwt exposing (handleError, JwtError)
 import Data.User as User exposing (AuthToken(AuthToken), encodeToken, Session, User, Username, withAuthorisation)
-import Request.Helpers exposing (apiUrl)
+import Request.Helpers exposing (apiUrl, send)
 import Ports
 import Task exposing (Task)
 import Time
@@ -61,11 +62,6 @@ register { username, password, email } =
 -- Refresh token logic
 
 
-type Msg
-    = TokenRefreshed (Result Http.Error AuthToken)
-    | NoRefreshRequired
-
-
 refreshToken : AuthToken -> Http.Request AuthToken
 refreshToken token =
     let
@@ -84,21 +80,28 @@ refreshToken token =
             |> toRequest
 
 
-refreshTask : User -> Task Http.Error AuthToken
-refreshTask user =
+refreshTokenCmd : User -> (Result JwtError AuthToken -> msg) -> Cmd msg
+refreshTokenCmd user msgCreator =
     let
+        getCmd : Float -> Task Never (Result JwtError AuthToken)
         getCmd remainingLife =
-            if remainingLife < 5000 then
+            if remainingLife < 30 * 60 * 1000 then
+                -- Refresh token when it expires in less than half hour
                 refreshToken user.token
                     |> Http.toTask
+                    |> Task.map Result.Ok
+                    |> Task.onError (Task.map Err << handleError (User.tokenToString user.token))
+                    |> Debug.log ("Attempting to refresh auth token as it will expire in " ++ toString remainingLife)
             else
-                Task.succeed user.token
+                Task.succeed (Ok user.token)
+                    |> Debug.log ("Not attempting to refresh auth token as it will only expire in " ++ toString remainingLife)
     in
         tokenRemainingLife user.exp
             |> Task.andThen getCmd
+            |> Task.perform msgCreator
 
 
-tokenRemainingLife : Int -> Task Http.Error Float
+tokenRemainingLife : Int -> Task Never Float
 tokenRemainingLife expires =
     Time.now
         |> Task.andThen ((-) (toFloat expires * 1000) >> Task.succeed)
