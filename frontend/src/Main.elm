@@ -107,7 +107,7 @@ frame session navbarState content isLoading complaints =
                 , section [ class "section" ]
                     [ div [ class "container" ]
                         [ div [ class "columns" ]
-                            [ div [ class "column is-3 is-hidden-touch" ] [ ComplaintMenu.viewMenu complaints ]
+                            [ div [ class "column is-3 is-hidden-touch" ] [ ComplaintMenu.viewMenu user complaints ]
                             , div [ class "column is-9" ] [ content ]
                             ]
                         ]

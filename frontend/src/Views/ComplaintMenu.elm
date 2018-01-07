@@ -20,20 +20,23 @@ aside attributes children =
     node "aside" attributes children
 
 
-viewMenu : List Complaint -> Html msg
-viewMenu complaints =
+viewMenu : User -> List Complaint -> Html msg
+viewMenu user complaints =
     aside
         [ class "menu" ]
-        [ newComplaintButton
+        [ newComplaintButton user
         , p [ class "menu-label" ] [ text "Észrevételek" ]
         , viewComplaints complaints
         ]
 
 
-newComplaintButton : Html msg
-newComplaintButton =
-    a [ class "button is-dark is-outlined is-block is-alt is-large", href NewComplaint ]
-        [ text "Új észrevétel" ]
+newComplaintButton : User -> Html msg
+newComplaintButton user =
+    if user.isStaff then
+        text ""
+    else
+        a [ class "button is-dark is-outlined is-block is-alt is-large", href NewComplaint ]
+            [ text "Új észrevétel" ]
 
 
 viewComplaint : Complaint -> Html msg

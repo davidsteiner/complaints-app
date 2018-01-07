@@ -1,12 +1,22 @@
+from datetime import datetime
 from django.contrib.auth.models import User
 import logging
 from rest_framework import permissions, serializers
 from rest_framework.response import Response
 import rest_framework.status as status
 from rest_framework.views import APIView
+from rest_framework_jwt.settings import api_settings
 
 
 logger = logging.getLogger(__name__)
+
+
+def jwt_payload_hander(user):
+    return {
+        'username': user.username,
+        'exp': datetime.utcnow() + api_settings.JWT_EXPIRATION_DELTA,
+        'is_staff': user.is_staff
+    }
 
 
 class UserSerializer(serializers.ModelSerializer):

@@ -20,6 +20,6 @@ view session complaints =
 
         Just user ->
             div []
-                [ div [ class "is-hidden-desktop" ] [ viewMenu complaints ]
+                [ div [ class "is-hidden-desktop" ] [ viewMenu user complaints ]
                 , div [ class "is-hidden-touch" ] [ text "Home screen" ]
                 ]

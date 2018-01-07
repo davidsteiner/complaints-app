@@ -12,6 +12,7 @@ type alias User =
     { username : Username
     , exp : Int
     , token : AuthToken
+    , isStaff : Bool
     }
 
 
@@ -43,6 +44,7 @@ decoder =
         |> required "username" usernameDecoder
         |> required "exp" Decode.int
         |> optional "token" tokenDecoder (AuthToken "")
+        |> required "is_staff" Decode.bool
 
 
 encode : User -> Value

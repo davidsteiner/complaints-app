@@ -67,6 +67,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 JWT_AUTH = {
     'JWT_ALLOW_REFRESH': True,
     'JWT_EXPIRATION_DELTA': datetime.timedelta(hours=1),  # Tokens expire in an hour
+    'JWT_PAYLOAD_HANDLER': 'login_jwt.views.jwt_payload_hander'
 }
 
 MIDDLEWARE = [
