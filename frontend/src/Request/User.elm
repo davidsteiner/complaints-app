@@ -4,9 +4,11 @@ import Http
 import HttpBuilder exposing (RequestBuilder, post, toRequest, withBody, withExpect)
 import Json.Decode as Decode
 import Json.Encode as Encode
-import Data.User as User exposing (AuthToken, encodeToken, Session, User, Username, withAuthorisation)
+import Data.User as User exposing (AuthToken(AuthToken), encodeToken, Session, User, Username, withAuthorisation)
 import Request.Helpers exposing (apiUrl)
 import Ports
+import Task exposing (Task)
+import Time
 
 
 storeSession : Session -> Cmd msg
@@ -55,6 +57,15 @@ register { username, password, email } =
             |> Http.post (apiUrl "/register/") body
 
 
+
+-- Refresh token logic
+
+
+type Msg
+    = TokenRefreshed (Result Http.Error AuthToken)
+    | NoRefreshRequired
+
+
 refreshToken : AuthToken -> Http.Request AuthToken
 refreshToken token =
     let
@@ -71,3 +82,23 @@ refreshToken token =
             |> withBody body
             |> withExpect (Http.expectJson decoder)
             |> toRequest
+
+
+refreshTask : User -> Task Http.Error AuthToken
+refreshTask user =
+    let
+        getCmd remainingLife =
+            if remainingLife < 5000 then
+                refreshToken user.token
+                    |> Http.toTask
+            else
+                Task.succeed user.token
+    in
+        tokenRemainingLife user.exp
+            |> Task.andThen getCmd
+
+
+tokenRemainingLife : Int -> Task Http.Error Float
+tokenRemainingLife expires =
+    Time.now
+        |> Task.andThen ((-) (toFloat expires * 1000) >> Task.succeed)
