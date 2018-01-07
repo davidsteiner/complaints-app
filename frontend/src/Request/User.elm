@@ -1,9 +1,10 @@
-module Request.User exposing (login, register, storeSession)
+module Request.User exposing (login, refreshToken, register, storeSession)
 
 import Http
+import HttpBuilder exposing (RequestBuilder, post, toRequest, withBody, withExpect)
 import Json.Decode as Decode
 import Json.Encode as Encode
-import Data.User as User exposing (Session, User, Username)
+import Data.User as User exposing (AuthToken, encodeToken, Session, User, Username, withAuthorisation)
 import Request.Helpers exposing (apiUrl)
 import Ports
 
@@ -46,10 +47,27 @@ register { username, password, email } =
                 , ( "password", Encode.string password )
                 , ( "email", Encode.string email )
                 ]
-                |> Debug.log "Registering"
 
         body =
             Http.jsonBody user
     in
         Decode.field "username" User.usernameDecoder
             |> Http.post (apiUrl "/register/") body
+
+
+refreshToken : AuthToken -> Http.Request AuthToken
+refreshToken token =
+    let
+        body =
+            Encode.object
+                [ ( "token", encodeToken token ) ]
+                |> Http.jsonBody
+
+        decoder =
+            Decode.field "token" User.tokenDecoder
+    in
+        apiUrl "/api-token-refresh/"
+            |> post
+            |> withBody body
+            |> withExpect (Http.expectJson decoder)
+            |> toRequest

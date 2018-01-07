@@ -4,11 +4,11 @@ import Html exposing (div, Html, program, section, text)
 import Html.Attributes exposing (class, id)
 import Http
 import Json.Decode as Decode exposing (Value)
-import Jwt exposing (JwtError)
+import Jwt exposing (JwtError(TokenExpired))
 import Navigation exposing (Location)
 import Task
 import Data.Conversation exposing (Complaint)
-import Data.User as User exposing (User, Session, tokenToUser)
+import Data.User as User exposing (AuthToken(AuthToken), User, Session, tokenToUser)
 import Page.Conversation as Conversation
 import Page.Errored exposing (PageLoadError)
 import Page.Home as Home
@@ -18,6 +18,7 @@ import Page.NotFound as NotFound
 import Page.Register as Register
 import Ports
 import Request.Helpers exposing (send)
+import Request.User exposing (refreshToken)
 import Route exposing (Route)
 import Task
 import Views.ComplaintMenu as ComplaintMenu
@@ -36,10 +37,13 @@ init val location =
 
 decodeUserFromJson : Value -> Maybe User
 decodeUserFromJson json =
-    json
-        |> Decode.decodeValue Decode.string
-        |> Result.toMaybe
-        |> Maybe.andThen (Decode.decodeString User.decoder >> Result.toMaybe)
+    case Decode.decodeValue Decode.string <| json of
+        Ok tokenStr ->
+            tokenToUser <| AuthToken tokenStr
+
+        Err err ->
+            Nothing
+                |> Debug.log ("Failed to decode user from stored session: " ++ err)
 
 
 initialPage : Page
@@ -154,10 +158,10 @@ type Msg
     | NavbarMsg Navbar.Msg
     | NewComplaintMsg NewComplaint.Msg
     | ConversationMsg Conversation.Msg
-    | SetUser (Maybe User)
     | SetRoute (Maybe Route)
     | ComplaintListUpdated (Result JwtError (List Complaint))
     | ConversationLoaded User (Result JwtError Data.Conversation.Conversation)
+    | TokenRefreshed (Result JwtError AuthToken)
 
 
 
@@ -240,7 +244,7 @@ update msg model =
 
             ( ComplaintListUpdated (Err err), _ ) ->
                 case err of
-                    Jwt.TokenExpired ->
+                    TokenExpired ->
                         ( { model | session = Nothing }, Cmd.batch [ Ports.storeSession Nothing, Route.modifyUrl Route.Home ] )
                             |> Debug.log "Logging user out as jwt has expired."
 
@@ -257,9 +261,28 @@ update msg model =
 
             ( ConversationLoaded _ (Err err), _ ) ->
                 case err of
-                    Jwt.TokenExpired ->
+                    TokenExpired ->
                         ( { model | session = Nothing }, Cmd.batch [ Ports.storeSession Nothing, Route.modifyUrl Route.Home ] )
                             |> Debug.log "Logging user out as jwt has expired."
+
+                    _ ->
+                        ( model, Cmd.none )
+                            |> Debug.log (toString err)
+
+            ( TokenRefreshed (Ok newToken), _ ) ->
+                case tokenToUser newToken of
+                    Nothing ->
+                        ( model, Cmd.none )
+                            |> Debug.log "Something went wrong with parsing the token. The token was not refreshed."
+
+                    Just user ->
+                        ( { model | session = Just user }, Ports.storeSession <| Just <| User.tokenToString user.token )
+
+            ( TokenRefreshed (Err err), _ ) ->
+                case err of
+                    TokenExpired ->
+                        ( { model | session = Nothing }, Cmd.batch [ Ports.storeSession Nothing, Route.modifyUrl Route.Home ] )
+                            |> Debug.log "Logging user out as jwt has expired before we could refresh the token"
 
                     _ ->
                         ( model, Cmd.none )
@@ -323,7 +346,7 @@ setAuthenticatedRoute route model user =
                     in
                         ( model, cmd )
     in
-        ( newModel, Cmd.batch [ cmd ] )
+        ( newModel, Cmd.batch [ cmd, send user TokenRefreshed <| refreshToken user.token ] )
 
 
 setUnauthenticatedRoute : Route -> Model -> ( Model, Cmd Msg )
