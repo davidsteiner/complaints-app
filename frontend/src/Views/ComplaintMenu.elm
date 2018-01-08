@@ -2,7 +2,7 @@ module Views.ComplaintMenu exposing (..)
 
 import Data.Conversation exposing (Complaint)
 import Data.User exposing (User)
-import Html exposing (a, Attribute, div, Html, input, label, li, node, p, text, ul)
+import Html exposing (a, Attribute, div, hr, Html, i, input, label, li, node, p, span, text, ul)
 import Html.Attributes exposing (class, id, type_, value)
 import Html.Events exposing (onInput)
 import Http
@@ -25,6 +25,7 @@ viewMenu user complaints =
     aside
         [ class "menu" ]
         [ newComplaintButton user
+        , hr [] []
         , p [ class "menu-label" ] [ text "Észrevételek" ]
         , viewComplaints complaints
         ]
@@ -41,7 +42,12 @@ newComplaintButton user =
 
 viewComplaint : Complaint -> Html msg
 viewComplaint complaint =
-    li [] [ a [ href (Conversation complaint.id) ] [ text complaint.subject ] ]
+    li []
+        [ a [ class "button is-outlined is-fullwidth", href (Conversation complaint.id) ]
+            [ span [ class "icon" ] [ i [ class "fa fa-book" ] [] ]
+            , span [] [ text complaint.subject ]
+            ]
+        ]
 
 
 viewComplaints : List Complaint -> Html msg

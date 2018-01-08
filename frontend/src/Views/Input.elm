@@ -1,7 +1,7 @@
 module Views.Input exposing (viewEmailField, viewPasswordField, viewTextArea, viewTextField)
 
 import Html exposing (div, Html, input, label, text, textarea)
-import Html.Attributes exposing (class, id, type_, value)
+import Html.Attributes exposing (class, id, maxlength, type_, value)
 import Html.Events exposing (onInput)
 
 
@@ -24,7 +24,7 @@ viewField_ : { id_ : String, label_ : String, inputType : String, inputClass : S
 viewField_ { id_, label_, inputType, inputClass, inputValue, msg } =
     div [ class "field" ]
         [ label [ class "label" ] [ text label_ ]
-        , input [ id id_, type_ inputType, class inputClass, onInput msg, value inputValue ] []
+        , input [ id id_, maxlength 30, type_ inputType, class inputClass, onInput msg, value inputValue ] []
         ]
 
 
