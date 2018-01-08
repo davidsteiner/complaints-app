@@ -34,6 +34,7 @@ type alias Model =
 
 type ExternalMsg
     = NoOp
+    | ErrorReceived JwtError
 
 
 initialModel : User -> Model
@@ -88,20 +89,12 @@ update msg model =
 
         -- Login failed with error
         ComplaintRegistered (Err err) ->
-            let
-                ( error, cmd ) =
-                    case err of
-                        TokenExpired ->
-                            ( Nothing, Route.modifyUrl (Route.Logout) )
+            case err of
+                TokenExpired ->
+                    ( ( model, Route.modifyUrl Route.Logout ), NoOp )
 
-                        _ ->
-                            ( Just ("Unable to process complaint. Reason: " ++ (toString err)), Cmd.none )
-            in
-                ( ( { model | serverError = error }
-                  , cmd
-                  )
-                , NoOp
-                )
+                otherError ->
+                    ( ( model, Cmd.none ), ErrorReceived otherError )
 
         -- Login succeeded
         ComplaintRegistered (Ok complaint) ->

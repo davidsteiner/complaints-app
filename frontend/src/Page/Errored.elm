@@ -1,17 +1,59 @@
-module Page.Errored exposing (PageLoadError, view)
+module Page.Errored exposing (ErrorMessage, view)
 
 import Html exposing (div, Html, h3, text)
+import Html.Attributes exposing (class)
+import Http exposing (Error(..))
+import Jwt exposing (JwtError(..))
 
 
-type alias Model =
-  { errorMessage : String }
+type alias ErrorMessage =
+    JwtError
 
 
-type PageLoadError =
-  PageLoadError Model
+view : ErrorMessage -> Html msg
+view errorMessage =
+    div [ class "message is-danger" ]
+        [ div [ class "message-header" ] [ text "Error" ]
+        , div [ class "message-body" ] [ text <| formatError errorMessage ]
+        ]
 
 
-view : PageLoadError -> Html msg
-view (PageLoadError model) =
-  div []
-      [ h3 [] [ text model.errorMessage ] ]
+formatError : JwtError -> String
+formatError err =
+    case err of
+        TokenExpired ->
+            "Token has expired."
+
+        HttpError httpError ->
+            formatHttpError httpError
+
+        Unauthorized ->
+            "Unauthorized request to resource."
+
+        TokenNotExpired ->
+            "Unexpected token error."
+
+        TokenProcessingError errorString ->
+            "Error in processing token: " ++ errorString
+
+        TokenDecodeError errorString ->
+            "Error in decoding token: " ++ errorString
+
+
+formatHttpError : Error -> String
+formatHttpError err =
+    case err of
+        Timeout ->
+            "Timeout error."
+
+        NetworkError ->
+            "Unexpected network error."
+
+        BadPayload payload _ ->
+            "Incorrect/unexpected payload: " ++ payload
+
+        BadStatus response ->
+            "Bad response from server (" ++ toString response.status.code ++ "): " ++ response.status.message
+
+        BadUrl error ->
+            "Bad URL error: " ++ error

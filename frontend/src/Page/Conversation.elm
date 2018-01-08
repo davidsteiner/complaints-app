@@ -17,7 +17,6 @@ import Views.Input exposing (viewTextArea)
 type alias Model =
     { conversation : Data.Conversation.Conversation
     , newMessage : String
-    , serverError : Error
     , user : User
     }
 
@@ -34,11 +33,12 @@ type Msg
 
 type ExternalMsg
     = NoOp
+    | ErrorReceived JwtError
 
 
 initialModel : Data.Conversation.Conversation -> User -> Model
 initialModel conversation user =
-    { conversation = conversation, newMessage = "", serverError = Nothing, user = user }
+    { conversation = conversation, newMessage = "", user = user }
 
 
 view : Session -> Model -> Html Msg
@@ -129,20 +129,12 @@ update msg model =
             ( ( { model | newMessage = msg }, Cmd.none ), NoOp )
 
         MessageSent (Err err) ->
-            let
-                ( error, cmd ) =
-                    case err of
-                        TokenExpired ->
-                            ( Nothing, Route.modifyUrl (Route.Logout) )
+            case err of
+                TokenExpired ->
+                    ( ( model, Route.modifyUrl Route.Logout ), NoOp )
 
-                        _ ->
-                            ( Just ("Unable to process complaint. Reason: " ++ (toString err)), Cmd.none )
-            in
-                ( ( { model | serverError = error }
-                  , cmd
-                  )
-                , NoOp
-                )
+                otherError ->
+                    ( ( model, Cmd.none ), ErrorReceived otherError )
 
         -- Login succeeded
         MessageSent (Ok conversation) ->

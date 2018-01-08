@@ -10,7 +10,7 @@ import Task
 import Data.Conversation exposing (Complaint)
 import Data.User as User exposing (AuthToken(AuthToken), User, Session, tokenToUser)
 import Page.Conversation as Conversation
-import Page.Errored exposing (PageLoadError)
+import Page.Errored exposing (ErrorMessage)
 import Page.Home as Home
 import Page.Login as Login
 import Page.NewComplaint as NewComplaint
@@ -60,7 +60,7 @@ type Page
     | Login Login.Model
     | Register Register.Model
     | Home Home.Model
-    | Errored PageLoadError
+    | Errored ErrorMessage
     | NotFound
     | NewComplaint NewComplaint.Model
     | Conversation Conversation.Model
@@ -216,20 +216,25 @@ update msg model =
                 let
                     ( ( pageModel, cmd ), msgFromPage ) =
                         NewComplaint.update subMsg subModel
-
-                    newModel =
-                        case msgFromPage of
-                            NewComplaint.NoOp ->
-                                model
                 in
-                    ( { newModel | pageState = Loaded (NewComplaint pageModel) }, Cmd.map NewComplaintMsg cmd )
+                    case msgFromPage of
+                        NewComplaint.NoOp ->
+                            ( { model | pageState = Loaded <| NewComplaint pageModel }, Cmd.map NewComplaintMsg cmd )
+
+                        NewComplaint.ErrorReceived jwtError ->
+                            ( { model | pageState = Loaded <| Errored jwtError }, Cmd.none )
 
             ( ConversationMsg subMsg, Conversation subModel ) ->
                 let
                     ( ( pageModel, cmd ), msgFromPage ) =
                         Conversation.update subMsg subModel
                 in
-                    ( { model | pageState = Loaded (Conversation pageModel) }, Cmd.map ConversationMsg cmd )
+                    case msgFromPage of
+                        Conversation.NoOp ->
+                            ( { model | pageState = Loaded <| Conversation pageModel }, Cmd.map ConversationMsg cmd )
+
+                        Conversation.ErrorReceived jwtError ->
+                            ( { model | pageState = Loaded <| Errored jwtError }, Cmd.none )
 
             ( NavbarMsg _, _ ) ->
                 let
@@ -250,9 +255,8 @@ update msg model =
                         ( { model | session = Nothing }, Cmd.batch [ Ports.storeSession Nothing, Route.modifyUrl Route.Home ] )
                             |> Debug.log "Logging user out as jwt has expired."
 
-                    _ ->
-                        ( { model | complaints = [] }, Cmd.none )
-                            |> Debug.log (toString err)
+                    otherError ->
+                        ( { model | pageState = Loaded <| Errored otherError }, Cmd.none )
 
             ( ConversationLoaded user (Ok conversation), _ ) ->
                 let
@@ -267,9 +271,8 @@ update msg model =
                         ( { model | session = Nothing }, Cmd.batch [ Ports.storeSession Nothing, Route.modifyUrl Route.Home ] )
                             |> Debug.log "Logging user out as jwt has expired."
 
-                    _ ->
-                        ( model, Cmd.none )
-                            |> Debug.log (toString err)
+                    otherError ->
+                        ( { model | pageState = Loaded <| Errored otherError }, Cmd.none )
 
             ( TokenRefreshed (Ok newToken), _ ) ->
                 case model.session of
@@ -292,9 +295,8 @@ update msg model =
                         ( { model | session = Nothing }, Cmd.batch [ Ports.storeSession Nothing, Route.modifyUrl Route.Home ] )
                             |> Debug.log "Logging user out as jwt has expired before we could refresh the token"
 
-                    _ ->
-                        ( model, Cmd.none )
-                            |> Debug.log (toString err)
+                    otherError ->
+                        ( { model | pageState = Loaded <| Errored otherError }, Cmd.none )
 
             ( _, _ ) ->
                 ( model, Cmd.none )
