@@ -61,7 +61,7 @@ submitButton =
 
 backToHomeButton : Html Msg
 backToHomeButton =
-    a [ class "button is-light is-pulled-right", Route.href Route.Home ] [ text "Vissza" ]
+    a [ class "button is-danger is-pulled-right is-hidden-desktop", Route.href Route.Home ] [ text "Vissza" ]
 
 
 update : Msg -> Model -> ( ( Model, Cmd Msg ), ExternalMsg )

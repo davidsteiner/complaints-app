@@ -26,7 +26,7 @@ viewNavbar state isLoading complaints =
 
 logoutLink : Html Msg
 logoutLink =
-    a [ class "navbar-item is-right", href Route.Logout ]
+    a [ class "navbar-item", href Route.Logout ]
         [ span [ class "icon" ] [ i [ class "fa fa-sign-out" ] [] ]
         , text "Kijelentkezés"
         ]
@@ -34,7 +34,7 @@ logoutLink =
 
 homeLink : Html Msg
 homeLink =
-    a [ class "navbar-item", href Route.Home ]
+    a [ class "navbar-item is-hidden-touch", href Route.Home ]
         [ span [ class "icon" ] [ i [ class "fa fa-home" ] [] ]
         , text "Kezdőlap"
         ]

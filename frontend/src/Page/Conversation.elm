@@ -83,7 +83,7 @@ submitButton =
 
 backToHomeButton : Html Msg
 backToHomeButton =
-    a [ class "button is-primary is-pulled-right", href Route.Home ] [ text "Vissza" ]
+    a [ class "button is-primary is-pulled-right is-hidden-desktop", href Route.Home ] [ text "Vissza" ]
 
 
 viewMessages : User -> List ConversationMessage -> Html Msg

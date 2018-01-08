@@ -22,22 +22,25 @@ aside attributes children =
 
 viewMenu : User -> List Complaint -> Html msg
 viewMenu user complaints =
-    aside
-        [ class "menu" ]
-        [ newComplaintButton user
-        , hr [] []
-        , p [ class "menu-label" ] [ text "Észrevételek" ]
-        , viewComplaints complaints
-        ]
+    let
+        btn =
+            if user.isStaff then
+                [ text "" ]
+            else
+                [ newComplaintButton, hr [] [] ]
+    in
+        aside
+            [ class "menu" ]
+            [ div [] btn
+            , p [ class "menu-label" ] [ text "Észrevételek" ]
+            , viewComplaints complaints
+            ]
 
 
-newComplaintButton : User -> Html msg
-newComplaintButton user =
-    if user.isStaff then
-        text ""
-    else
-        a [ class "button is-dark is-outlined is-block is-alt is-large", href NewComplaint ]
-            [ text "Új észrevétel" ]
+newComplaintButton : Html msg
+newComplaintButton =
+    a [ class "button is-dark is-outlined is-block is-alt is-large", href NewComplaint ]
+        [ text "Új észrevétel" ]
 
 
 viewComplaint : Complaint -> Html msg
