@@ -18,7 +18,7 @@ def send_notification(complaint, message):
         recipients = [complaint.owner.email]
 
     if recipients:
-        send_mail("Message from {}".format(message.sender),
+        send_mail("Új üzenet: {} - {}".format(message.sender, message.formatted_timestamp()),
                   message.text,
                   settings.EMAIL_NOTIFIER_ADDRESS,
                   recipients,
