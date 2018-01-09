@@ -1,11 +1,11 @@
-module Page.Register exposing (..)
+module Page.Register exposing (ExternalMsg(..), initialModel, Model, Msg, update, view)
 
-import Html exposing (a, button, div, form, Html, h2, input, label, section, text)
-import Html.Attributes exposing (attribute, class, for, id, type_, value)
-import Html.Events exposing (onClick, onInput, onSubmit)
+import Html exposing (a, button, div, form, Html, h2, section, text)
+import Html.Attributes exposing (class, id)
+import Html.Events exposing (onClick, onSubmit)
 import Http
 import Data.User as User exposing (Username, Session)
-import Request.User exposing (storeSession)
+import Request.User exposing (register)
 import Route
 import Views.Input exposing (viewEmailField, viewPasswordField, viewTextField)
 
@@ -52,7 +52,7 @@ update msg model =
             case validate model of
                 [] ->
                     ( ( { model | serverError = Nothing }
-                      , Http.send RegisterCompleted (Request.User.register model)
+                      , Http.send RegisterCompleted (register model)
                       )
                     , NoOp
                     )
@@ -98,7 +98,6 @@ view : Session -> Model -> Html Msg
 view session model =
     case session of
         Just user ->
-            -- If they user is logged in and somehow ends up on this page, show a message
             div [] [ text ("Már be vagy jelentkezve!") ]
 
         Nothing ->
@@ -150,10 +149,6 @@ viewForm model =
         , a [ Route.href Route.Login ]
             [ text "Már regisztráltál? Jelentkezz be itt." ]
         ]
-
-
-
--- TODO finish validation logic
 
 
 validate : Model -> List Error

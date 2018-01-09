@@ -1,8 +1,8 @@
 module Page.Login exposing (ExternalMsg(..), initialModel, Model, Msg(..), update, view)
 
-import Html exposing (a, button, div, form, Html, h2, input, label, p, section, text)
-import Html.Attributes exposing (class, for, id, type_)
-import Html.Events exposing (onClick, onInput, onSubmit)
+import Html exposing (a, button, div, form, Html, h2, section, text)
+import Html.Attributes exposing (class, id)
+import Html.Events exposing (onClick, onSubmit)
 import Http
 import Data.User exposing (AuthToken, User, Username, Session, tokenToUser)
 import Request.User exposing (storeSession)
@@ -54,21 +54,17 @@ initialModel maybeName =
 update : Msg -> Model -> ( ( Model, Cmd Msg ), ExternalMsg )
 update msg model =
     case msg of
-        -- Login request is submitted
         SubmitForm ->
             ( ( { model | serverError = Nothing }, (Http.send LoginCompleted (Request.User.login model)) )
             , NoOp
             )
 
-        -- Email field changed
         SetUsername name ->
             ( ( { model | username = name }, Cmd.none ), NoOp )
 
-        -- Password field changed
         SetPassword password ->
             ( ( { model | password = password }, Cmd.none ), NoOp )
 
-        -- Login failed with error
         LoginCompleted (Err error) ->
             let
                 errorMessage =
@@ -85,7 +81,6 @@ update msg model =
                 , NoOp
                 )
 
-        -- Login succeeded
         LoginCompleted (Ok token) ->
             let
                 session =
@@ -105,7 +100,6 @@ view : Session -> Model -> Html Msg
 view session model =
     case session of
         Just user ->
-            -- If they user is logged in and somehow ends up on this page, show a message
             div [] [ text ("Már be vagy jelentkezve!") ]
 
         Nothing ->

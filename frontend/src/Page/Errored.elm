@@ -1,6 +1,6 @@
 module Page.Errored exposing (ErrorMessage, view)
 
-import Html exposing (div, Html, h3, text)
+import Html exposing (div, Html, text)
 import Html.Attributes exposing (class)
 import Http exposing (Error(..))
 import Jwt exposing (JwtError(..))

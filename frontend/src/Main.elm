@@ -6,7 +6,6 @@ import Http
 import Json.Decode as Decode exposing (Value)
 import Jwt exposing (JwtError(TokenExpired))
 import Navigation exposing (Location)
-import Task
 import Data.Conversation exposing (Complaint)
 import Data.User as User exposing (AuthToken(AuthToken), User, Session, tokenToUser)
 import Page.Conversation as Conversation
@@ -43,16 +42,11 @@ decodeUserFromJson json =
 
         Err err ->
             Nothing
-                |> Debug.log ("Failed to decode user from stored session: " ++ err)
 
 
 initialPage : Page
 initialPage =
     Blank
-
-
-
--- Model
 
 
 type Page
@@ -77,10 +71,6 @@ type alias Model =
     , navbarState : Navbar.State
     , complaints : List Complaint
     }
-
-
-
--- View
 
 
 view : Model -> Html Msg
@@ -161,10 +151,6 @@ type Msg
     | ComplaintListUpdated (Result JwtError (List Complaint))
     | ConversationLoaded User (Result JwtError Data.Conversation.Conversation)
     | TokenRefreshed (Result JwtError AuthToken)
-
-
-
--- Update
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -253,7 +239,6 @@ update msg model =
                 case err of
                     TokenExpired ->
                         ( { model | session = Nothing }, Cmd.batch [ Ports.storeSession Nothing, Route.modifyUrl Route.Home ] )
-                            |> Debug.log "Logging user out as jwt has expired."
 
                     otherError ->
                         ( { model | pageState = Loaded <| Errored otherError }, Cmd.none )
@@ -269,7 +254,6 @@ update msg model =
                 case err of
                     TokenExpired ->
                         ( { model | session = Nothing }, Cmd.batch [ Ports.storeSession Nothing, Route.modifyUrl Route.Home ] )
-                            |> Debug.log "Logging user out as jwt has expired."
 
                     otherError ->
                         ( { model | pageState = Loaded <| Errored otherError }, Cmd.none )
@@ -277,14 +261,12 @@ update msg model =
             ( TokenRefreshed (Ok newToken), _ ) ->
                 case model.session of
                     Nothing ->
-                        -- We do not want to overwrite the session if we've already logged out for some reason
                         ( model, Cmd.none )
 
                     Just _ ->
                         case tokenToUser newToken of
                             Nothing ->
                                 ( model, Cmd.none )
-                                    |> Debug.log "Something went wrong with parsing the token. The token was not refreshed."
 
                             Just user ->
                                 ( { model | session = Just user }, Ports.storeSession <| Just <| User.tokenToString user.token )
@@ -293,7 +275,6 @@ update msg model =
                 case err of
                     TokenExpired ->
                         ( { model | session = Nothing }, Cmd.batch [ Ports.storeSession Nothing, Route.modifyUrl Route.Home ] )
-                            |> Debug.log "Logging user out as jwt has expired before we could refresh the token"
 
                     otherError ->
                         ( { model | pageState = Loaded <| Errored otherError }, Cmd.none )
@@ -302,27 +283,19 @@ update msg model =
                 ( model, Cmd.none )
 
 
-
--- Routing
-
-
 setRoute : Maybe Route -> Model -> ( Model, Cmd Msg )
 setRoute maybeRoute model =
-    let
-        transition toMsg task =
-            ( { model | pageState = TransitioningFrom (getPage model.pageState) }, Task.attempt toMsg task )
-    in
-        case maybeRoute of
-            Nothing ->
-                ( { model | pageState = Loaded NotFound }, Cmd.none )
+    case maybeRoute of
+        Nothing ->
+            ( { model | pageState = Loaded NotFound }, Cmd.none )
 
-            Just route ->
-                case model.session of
-                    Just user ->
-                        setAuthenticatedRoute route model user
+        Just route ->
+            case model.session of
+                Just user ->
+                    setAuthenticatedRoute route model user
 
-                    Nothing ->
-                        setUnauthenticatedRoute route model
+                Nothing ->
+                    setUnauthenticatedRoute route model
 
 
 setAuthenticatedRoute : Route -> Model -> User -> ( Model, Cmd Msg )
@@ -342,7 +315,6 @@ setAuthenticatedRoute route model user =
                 ( { model | pageState = Loaded (Home model.complaints) }, Cmd.batch [ updateComplaintListCmd, refreshToken ] )
 
             Route.Logout ->
-                -- Set session to nothing both in the model and in the local storage and redirect to Home
                 ( { model | session = Nothing }, Cmd.batch [ Ports.storeSession Nothing, Route.modifyUrl Route.Home ] )
 
             Route.Register ->
@@ -382,17 +354,9 @@ getPage pageState =
             page
 
 
-
--- Subscriptions
-
-
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.none
-
-
-
--- Main
 
 
 main : Program Value Model Msg

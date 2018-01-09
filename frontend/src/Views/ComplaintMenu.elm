@@ -1,10 +1,9 @@
-module Views.ComplaintMenu exposing (..)
+module Views.ComplaintMenu exposing (init, viewMenu)
 
 import Data.Conversation exposing (Complaint)
 import Data.User exposing (User)
-import Html exposing (a, Attribute, div, hr, Html, i, input, label, li, node, p, span, text, ul)
-import Html.Attributes exposing (class, id, type_, value)
-import Html.Events exposing (onInput)
+import Html exposing (a, Attribute, div, hr, Html, i, li, node, p, span, text, ul)
+import Html.Attributes exposing (class)
 import Http
 import Request.Complaint exposing (complaintList)
 import Route exposing (href, Route(Conversation, NewComplaint))

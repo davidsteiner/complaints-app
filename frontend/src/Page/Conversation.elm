@@ -1,8 +1,8 @@
-module Page.Conversation exposing (..)
+module Page.Conversation exposing (ExternalMsg(..), init, initialModel, Model, Msg, update, view)
 
 import Data.Conversation exposing (ConversationMessage)
-import Data.User exposing (Session, User, usernameToString)
-import Html exposing (a, br, button, div, form, h2, hr, Html, li, ol, p, pre, section, small, span, strong, text, textarea, ul)
+import Data.User exposing (Session, User)
+import Html exposing (a, br, button, div, form, hr, Html, p, section, small, span, strong, text)
 import Html.Attributes exposing (class, style)
 import Html.Events exposing (onSubmit)
 import Http
@@ -113,7 +113,6 @@ viewMessage user message =
 update : Msg -> Model -> ( ( Model, Cmd Msg ), ExternalMsg )
 update msg model =
     case msg of
-        -- Login request is submitted
         SubmitForm ->
             case validate model of
                 [] ->
@@ -122,7 +121,6 @@ update msg model =
                     )
 
                 errors ->
-                    -- TODO: show form validation errors on page
                     ( ( model, Cmd.none ), NoOp )
 
         SetMessage msg ->
@@ -136,7 +134,6 @@ update msg model =
                 otherError ->
                     ( ( model, Cmd.none ), ErrorReceived otherError )
 
-        -- Login succeeded
         MessageSent (Ok conversation) ->
             ( ( { model | conversation = conversation, newMessage = "" }, Cmd.none )
             , NoOp

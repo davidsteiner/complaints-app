@@ -1,10 +1,9 @@
 module Page.Home exposing (Model, view)
 
-import Html exposing (a, h1, h2, Html, div, li, ol, section, text)
+import Html exposing (h1, h2, Html, div, li, ol, section, text)
 import Html.Attributes exposing (class)
 import Data.Conversation exposing (Complaint)
-import Data.User exposing (Session, usernameToString)
-import Route exposing (href)
+import Data.User exposing (Session)
 import Views.ComplaintMenu exposing (viewMenu)
 
 
@@ -30,7 +29,7 @@ viewBanner =
     section [ class "hero is-primary" ]
         [ div [ class "hero-body" ]
             [ div [ class "container" ]
-                [ h1 [ class "title" ] [ text "Észrevétel-jelentés" ]
+                [ h1 [ class "title" ] [ text "Észrevételjelentés" ]
                 , h2 [ class "subtitle" ] [ text "Használati útmutató" ]
                 ]
             ]

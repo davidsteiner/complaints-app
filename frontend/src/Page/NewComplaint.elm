@@ -1,10 +1,10 @@
 module Page.NewComplaint exposing (ExternalMsg(..), initialModel, Model, Msg, update, view)
 
 import Data.Conversation exposing (Complaint)
-import Data.User exposing (Session, User, usernameToString)
-import Html exposing (a, button, div, form, Html, label, p, text, textarea)
+import Data.User exposing (Session, User)
+import Html exposing (a, button, div, form, Html, text)
 import Html.Attributes exposing (class)
-import Html.Events exposing (onInput, onSubmit)
+import Html.Events exposing (onSubmit)
 import Http
 import Jwt exposing (JwtError(..))
 import Request.Complaint
@@ -67,7 +67,6 @@ backToHomeButton =
 update : Msg -> Model -> ( ( Model, Cmd Msg ), ExternalMsg )
 update msg model =
     case msg of
-        -- Login request is submitted
         SubmitForm ->
             case validate model of
                 [] ->
@@ -76,18 +75,14 @@ update msg model =
                     )
 
                 errors ->
-                    -- TODO: show form validation errors
                     ( ( model, Cmd.none ), NoOp )
 
-        -- Email field changed
         SetSubject s ->
             ( ( { model | subject = s }, Cmd.none ), NoOp )
 
-        -- Password field changed
         SetMessage msg ->
             ( ( { model | message = msg }, Cmd.none ), NoOp )
 
-        -- Login failed with error
         ComplaintRegistered (Err err) ->
             case err of
                 TokenExpired ->
@@ -96,15 +91,10 @@ update msg model =
                 otherError ->
                     ( ( model, Cmd.none ), ErrorReceived otherError )
 
-        -- Login succeeded
         ComplaintRegistered (Ok complaint) ->
             ( ( model, Route.modifyUrl (Route.Conversation complaint.id) )
             , NoOp
             )
-
-
-
--- TODO add validation for fields
 
 
 validate : Model -> List Error
