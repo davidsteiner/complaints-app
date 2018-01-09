@@ -10,6 +10,7 @@ import Jwt exposing (JwtError(..))
 import Request.Complaint
 import Request.Helpers exposing (send)
 import Route
+import Util exposing ((=>))
 import Views.Input exposing (viewTextField, viewTextArea)
 
 
@@ -70,31 +71,27 @@ update msg model =
         SubmitForm ->
             case validate model of
                 [] ->
-                    ( ( model, (send model.user ComplaintRegistered (Request.Complaint.newComplaint model)) )
-                    , NoOp
-                    )
+                    model => send model.user ComplaintRegistered (Request.Complaint.newComplaint model) => NoOp
 
                 errors ->
-                    ( ( model, Cmd.none ), NoOp )
+                    model => Cmd.none => NoOp
 
         SetSubject s ->
-            ( ( { model | subject = s }, Cmd.none ), NoOp )
+            { model | subject = s } => Cmd.none => NoOp
 
         SetMessage msg ->
-            ( ( { model | message = msg }, Cmd.none ), NoOp )
+            { model | message = msg } => Cmd.none => NoOp
 
         ComplaintRegistered (Err err) ->
             case err of
                 TokenExpired ->
-                    ( ( model, Route.modifyUrl Route.Logout ), NoOp )
+                    model => Route.modifyUrl Route.Logout => NoOp
 
                 otherError ->
-                    ( ( model, Cmd.none ), ErrorReceived otherError )
+                    model => Cmd.none => ErrorReceived otherError
 
         ComplaintRegistered (Ok complaint) ->
-            ( ( model, Route.modifyUrl (Route.Conversation complaint.id) )
-            , NoOp
-            )
+            model => Route.modifyUrl (Route.Conversation complaint.id) => NoOp
 
 
 validate : Model -> List Error

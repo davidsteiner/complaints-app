@@ -11,6 +11,7 @@ import Request.Complaint exposing (conversation)
 import Request.Helpers exposing (send)
 import Route exposing (href)
 import Task exposing (Task)
+import Util exposing ((=>))
 import Views.Input exposing (viewTextArea)
 
 
@@ -116,28 +117,24 @@ update msg model =
         SubmitForm ->
             case validate model of
                 [] ->
-                    ( ( model, (send model.user MessageSent (Request.Complaint.sendMessage model.user model.newMessage model.conversation.complaint.id)) )
-                    , NoOp
-                    )
+                    model => send model.user MessageSent (Request.Complaint.sendMessage model.user model.newMessage model.conversation.complaint.id) => NoOp
 
                 errors ->
-                    ( ( model, Cmd.none ), NoOp )
+                    model => Cmd.none => NoOp
 
         SetMessage msg ->
-            ( ( { model | newMessage = msg }, Cmd.none ), NoOp )
+            { model | newMessage = msg } => Cmd.none => NoOp
 
         MessageSent (Err err) ->
             case err of
                 TokenExpired ->
-                    ( ( model, Route.modifyUrl Route.Logout ), NoOp )
+                    model => Route.modifyUrl Route.Logout => NoOp
 
                 otherError ->
-                    ( ( model, Cmd.none ), ErrorReceived otherError )
+                    model => Cmd.none => ErrorReceived otherError
 
         MessageSent (Ok conversation) ->
-            ( ( { model | conversation = conversation, newMessage = "" }, Cmd.none )
-            , NoOp
-            )
+            { model | conversation = conversation, newMessage = "" } => Cmd.none => NoOp
 
 
 init : User -> Int -> Http.Request Data.Conversation.Conversation

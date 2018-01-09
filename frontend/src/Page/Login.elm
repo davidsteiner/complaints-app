@@ -7,6 +7,7 @@ import Http
 import Data.User exposing (AuthToken, User, Username, Session, tokenToUser)
 import Request.User exposing (storeSession)
 import Route
+import Util exposing ((=>))
 import Views.Input exposing (viewTextField, viewPasswordField)
 
 
@@ -55,15 +56,13 @@ update : Msg -> Model -> ( ( Model, Cmd Msg ), ExternalMsg )
 update msg model =
     case msg of
         SubmitForm ->
-            ( ( { model | serverError = Nothing }, (Http.send LoginCompleted (Request.User.login model)) )
-            , NoOp
-            )
+            { model | serverError = Nothing } => Http.send LoginCompleted (Request.User.login model) => NoOp
 
         SetUsername name ->
-            ( ( { model | username = name }, Cmd.none ), NoOp )
+            { model | username = name } => Cmd.none => NoOp
 
         SetPassword password ->
-            ( ( { model | password = password }, Cmd.none ), NoOp )
+            { model | password = password } => Cmd.none => NoOp
 
         LoginCompleted (Err error) ->
             let
@@ -75,25 +74,17 @@ update msg model =
                         _ ->
                             "Váratlan hiba a bejelentkezésben"
             in
-                ( ( { model | serverError = Just errorMessage }
-                  , Cmd.none
-                  )
-                , NoOp
-                )
+                { model | serverError = Just errorMessage } => Cmd.none => NoOp
 
         LoginCompleted (Ok token) ->
             let
                 session =
                     tokenToUser token
             in
-                ( ( model, Cmd.batch [ storeSession session, Route.modifyUrl Route.Home ] )
-                , SetSession session
-                )
+                model => Cmd.batch [ storeSession session, Route.modifyUrl Route.Home ] => SetSession session
 
         ClearServerError ->
-            ( ( { model | serverError = Nothing }, Cmd.none )
-            , NoOp
-            )
+            { model | serverError = Nothing } => Cmd.none => NoOp
 
 
 view : Session -> Model -> Html Msg

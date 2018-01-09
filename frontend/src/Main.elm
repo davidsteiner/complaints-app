@@ -20,6 +20,7 @@ import Request.Helpers exposing (send)
 import Request.User exposing (refreshTokenCmd)
 import Route exposing (Route)
 import Task
+import Util exposing ((=>))
 import Views.ComplaintMenu as ComplaintMenu
 import Views.Navbar as Navbar
 
@@ -181,7 +182,7 @@ update msg model =
                             Login.SetSession session ->
                                 { model | session = session }
                 in
-                    ( { newModel | pageState = Loaded (Login pageModel) }, Cmd.map LoginMsg cmd )
+                    { newModel | pageState = Loaded (Login pageModel) } => Cmd.map LoginMsg cmd
 
             ( RegisterMsg subMsg, Register subModel ) ->
                 let
@@ -196,7 +197,7 @@ update msg model =
                             Register.RedirectLogin user ->
                                 { model | pageState = Loaded (Login (Login.initialModel (Just user))) }
                 in
-                    ( newModel, Cmd.map RegisterMsg cmd )
+                    newModel => Cmd.map RegisterMsg cmd
 
             ( NewComplaintMsg subMsg, NewComplaint subModel ) ->
                 let
@@ -205,10 +206,10 @@ update msg model =
                 in
                     case msgFromPage of
                         NewComplaint.NoOp ->
-                            ( { model | pageState = Loaded <| NewComplaint pageModel }, Cmd.map NewComplaintMsg cmd )
+                            { model | pageState = Loaded <| NewComplaint pageModel } => Cmd.map NewComplaintMsg cmd
 
                         NewComplaint.ErrorReceived jwtError ->
-                            ( { model | pageState = Loaded <| Errored jwtError }, Cmd.none )
+                            { model | pageState = Loaded <| Errored jwtError } => Cmd.none
 
             ( ConversationMsg subMsg, Conversation subModel ) ->
                 let
@@ -217,77 +218,77 @@ update msg model =
                 in
                     case msgFromPage of
                         Conversation.NoOp ->
-                            ( { model | pageState = Loaded <| Conversation pageModel }, Cmd.map ConversationMsg cmd )
+                            { model | pageState = Loaded <| Conversation pageModel } => Cmd.map ConversationMsg cmd
 
                         Conversation.ErrorReceived jwtError ->
-                            ( { model | pageState = Loaded <| Errored jwtError }, Cmd.none )
+                            { model | pageState = Loaded <| Errored jwtError } => Cmd.none
 
             ( NavbarMsg _, _ ) ->
                 let
                     newNavbarState =
                         not model.navbarState
                 in
-                    ( { model | navbarState = newNavbarState }, Cmd.none )
+                    { model | navbarState = newNavbarState } => Cmd.none
 
             ( ComplaintListUpdated (Ok complaints), Home subModel ) ->
-                ( { model | complaints = complaints, pageState = Loaded (Home complaints) }, Cmd.none )
+                { model | complaints = complaints, pageState = Loaded (Home complaints) } => Cmd.none
 
             ( ComplaintListUpdated (Ok complaints), _ ) ->
-                ( { model | complaints = complaints }, Cmd.none )
+                { model | complaints = complaints } => Cmd.none
 
             ( ComplaintListUpdated (Err err), _ ) ->
                 case err of
                     TokenExpired ->
-                        ( { model | session = Nothing }, Cmd.batch [ Ports.storeSession Nothing, Route.modifyUrl Route.Home ] )
+                        { model | session = Nothing } => Cmd.batch [ Ports.storeSession Nothing, Route.modifyUrl Route.Home ]
 
                     otherError ->
-                        ( { model | pageState = Loaded <| Errored otherError }, Cmd.none )
+                        { model | pageState = Loaded <| Errored otherError } => Cmd.none
 
             ( ConversationLoaded user (Ok conversation), _ ) ->
                 let
                     subModel =
                         Conversation.initialModel conversation user
                 in
-                    ( { model | pageState = Loaded (Conversation subModel) }, Cmd.none )
+                    { model | pageState = Loaded (Conversation subModel) } => Cmd.none
 
             ( ConversationLoaded _ (Err err), _ ) ->
                 case err of
                     TokenExpired ->
-                        ( { model | session = Nothing }, Cmd.batch [ Ports.storeSession Nothing, Route.modifyUrl Route.Home ] )
+                        { model | session = Nothing } => Cmd.batch [ Ports.storeSession Nothing, Route.modifyUrl Route.Home ]
 
                     otherError ->
-                        ( { model | pageState = Loaded <| Errored otherError }, Cmd.none )
+                        { model | pageState = Loaded <| Errored otherError } => Cmd.none
 
             ( TokenRefreshed (Ok newToken), _ ) ->
                 case model.session of
                     Nothing ->
-                        ( model, Cmd.none )
+                        model => Cmd.none
 
                     Just _ ->
                         case tokenToUser newToken of
                             Nothing ->
-                                ( model, Cmd.none )
+                                model => Cmd.none
 
                             Just user ->
-                                ( { model | session = Just user }, Ports.storeSession <| Just <| User.tokenToString user.token )
+                                { model | session = Just user } => (Ports.storeSession <| Just <| User.tokenToString user.token)
 
             ( TokenRefreshed (Err err), _ ) ->
                 case err of
                     TokenExpired ->
-                        ( { model | session = Nothing }, Cmd.batch [ Ports.storeSession Nothing, Route.modifyUrl Route.Home ] )
+                        { model | session = Nothing } => Cmd.batch [ Ports.storeSession Nothing, Route.modifyUrl Route.Home ]
 
                     otherError ->
-                        ( { model | pageState = Loaded <| Errored otherError }, Cmd.none )
+                        { model | pageState = Loaded <| Errored otherError } => Cmd.none
 
             ( _, _ ) ->
-                ( model, Cmd.none )
+                model => Cmd.none
 
 
 setRoute : Maybe Route -> Model -> ( Model, Cmd Msg )
 setRoute maybeRoute model =
     case maybeRoute of
         Nothing ->
-            ( { model | pageState = Loaded NotFound }, Cmd.none )
+            { model | pageState = Loaded NotFound } => Cmd.none
 
         Just route ->
             case model.session of
@@ -309,39 +310,39 @@ setAuthenticatedRoute route model user =
     in
         case route of
             Route.Login ->
-                ( model, refreshToken )
+                model => refreshToken
 
             Route.Home ->
-                ( { model | pageState = Loaded (Home model.complaints) }, Cmd.batch [ updateComplaintListCmd, refreshToken ] )
+                { model | pageState = Loaded (Home model.complaints) } => Cmd.batch [ updateComplaintListCmd, refreshToken ]
 
             Route.Logout ->
-                ( { model | session = Nothing }, Cmd.batch [ Ports.storeSession Nothing, Route.modifyUrl Route.Home ] )
+                { model | session = Nothing } => Cmd.batch [ Ports.storeSession Nothing, Route.modifyUrl Route.Home ]
 
             Route.Register ->
-                ( model, Cmd.none )
+                model => Cmd.none
 
             Route.NewComplaint ->
-                ( { model | pageState = Loaded (NewComplaint (NewComplaint.initialModel user)) }, Cmd.batch [ updateComplaintListCmd, refreshToken ] )
+                { model | pageState = Loaded (NewComplaint (NewComplaint.initialModel user)) } => Cmd.batch [ updateComplaintListCmd, refreshToken ]
 
             Route.Conversation complaintId ->
                 let
                     cmd =
                         Cmd.batch [ send user (ConversationLoaded user) (Conversation.init user complaintId), updateComplaintListCmd, refreshToken ]
                 in
-                    ( model, cmd )
+                    model => cmd
 
 
 setUnauthenticatedRoute : Route -> Model -> ( Model, Cmd Msg )
 setUnauthenticatedRoute route model =
     case route of
         Route.Login ->
-            ( { model | pageState = Loaded (Login (Login.initialModel Nothing)) }, Cmd.none )
+            { model | pageState = Loaded (Login (Login.initialModel Nothing)) } => Cmd.none
 
         Route.Register ->
-            ( { model | pageState = Loaded (Register Register.initialModel) }, Cmd.none )
+            { model | pageState = Loaded (Register Register.initialModel) } => Cmd.none
 
         _ ->
-            ( model, Route.modifyUrl Route.Login )
+            model => Route.modifyUrl Route.Login
 
 
 getPage : PageState -> Page

@@ -7,6 +7,7 @@ import Http
 import Data.User as User exposing (Username, Session)
 import Request.User exposing (register)
 import Route
+import Util exposing ((=>))
 import Views.Input exposing (viewEmailField, viewPasswordField, viewTextField)
 
 
@@ -51,23 +52,19 @@ update msg model =
         SubmitForm ->
             case validate model of
                 [] ->
-                    ( ( { model | serverError = Nothing }
-                      , Http.send RegisterCompleted (register model)
-                      )
-                    , NoOp
-                    )
+                    { model | serverError = Nothing } => Http.send RegisterCompleted (register model) => NoOp
 
                 errors ->
-                    ( ( { model | serverError = Nothing }, Cmd.none ), NoOp )
+                    { model | serverError = Nothing } => Cmd.none => NoOp
 
         SetUsername username ->
-            ( ( { model | username = username }, Cmd.none ), NoOp )
+            { model | username = username } => Cmd.none => NoOp
 
         SetPassword password ->
-            ( ( { model | password = password }, Cmd.none ), NoOp )
+            { model | password = password } => Cmd.none => NoOp
 
         SetEmail email ->
-            ( ( { model | email = email }, Cmd.none ), NoOp )
+            { model | email = email } => Cmd.none => NoOp
 
         RegisterCompleted (Err error) ->
             let
@@ -79,19 +76,13 @@ update msg model =
                         _ ->
                             "Váratlan hiba a regisztrációban"
             in
-                ( ( { model | serverError = Just errorMessage }
-                  , Cmd.none
-                  )
-                , NoOp
-                )
+                { model | serverError = Just errorMessage } => Cmd.none => NoOp
 
         RegisterCompleted (Ok user) ->
-            ( ( model, Cmd.none ), RedirectLogin user )
+            model => Cmd.none => RedirectLogin user
 
         ClearServerError ->
-            ( ( { model | serverError = Nothing }, Cmd.none )
-            , NoOp
-            )
+            { model | serverError = Nothing } => Cmd.none => NoOp
 
 
 view : Session -> Model -> Html Msg
