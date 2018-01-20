@@ -10,6 +10,9 @@ from rest_framework.views import APIView
 
 def send_notification(complaint, message):
     recipients = []
+    messages = list(reversed(complaint.message_set.all()))
+    subject = ('RE: ' if len(messages) > 1 else '') + complaint.subject
+
     if message.sender == complaint.owner:
         # The sender of the message is the owner of the complaint, therefore we notify the admin users
         recipients = [user.email for user in User.objects.filter(is_staff=True) if user.email]
@@ -18,11 +21,32 @@ def send_notification(complaint, message):
         recipients = [complaint.owner.email]
 
     if recipients:
-        send_mail("Új üzenet: {} - {}".format(message.sender, message.formatted_timestamp()),
-                  message.text,
-                  settings.EMAIL_NOTIFIER_ADDRESS,
-                  recipients,
+        send_mail(subject=subject,
+                  message=build_email_text(messages),
+                  html_message=build_email_html(messages),
+                  from_email=settings.EMAIL_NOTIFIER_ADDRESS,
+                  recipient_list=recipients,
                   fail_silently=True)
+
+
+def build_email_text(messages):
+    message_texts = ['{} ({}):\n\n{}\n\n'.format(msg.sender, msg.formatted_timestamp(), msg.text) for msg in messages]
+    return '--------------------------\n\n'.join(message_texts)
+
+
+def format_message(message):
+    return '''<p style="text-align: right;"><small>{sender} ({time})</small></p>
+              <p style="white-space: pre-wrap;">{content}</p>
+           '''.format(
+                content=message.text,
+                sender=message.sender,
+                time=message.formatted_timestamp()
+    )
+
+
+def build_email_html(messages):
+    message_texts = [format_message(msg) for msg in messages]
+    return '<hr/>'.join(message_texts)
 
 
 class ComplaintView(APIView):
