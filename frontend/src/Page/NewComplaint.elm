@@ -7,11 +7,12 @@ import Html.Attributes exposing (class)
 import Html.Events exposing (onSubmit)
 import Http
 import Jwt exposing (JwtError(..))
+import Maybe.Extra exposing (values)
 import Request.Complaint
 import Request.Helpers exposing (send)
 import Route
 import Util exposing ((=>))
-import Views.Input exposing (viewTextField, viewTextArea)
+import Views.Input exposing (InputError, viewTextField, viewTextArea)
 
 
 type Msg
@@ -30,6 +31,8 @@ type alias Model =
     , subject : String
     , message : String
     , user : User
+    , subjectError : InputError
+    , messageError : InputError
     }
 
 
@@ -40,14 +43,14 @@ type ExternalMsg
 
 initialModel : User -> Model
 initialModel user =
-    { serverError = Nothing, subject = "", message = "", user = user }
+    { serverError = Nothing, subject = "", message = "", user = user, subjectError = Nothing, messageError = Nothing }
 
 
 view : Session -> Model -> Html Msg
 view _ model =
     form [ class "form-group", onSubmit SubmitForm ]
-        [ viewTextField { id = "subject-input", label = "Tárgy", value = model.subject, msg = SetSubject }
-        , viewTextArea { label_ = "Észrevétel", val = model.message, msg = SetMessage }
+        [ viewTextField "Tárgy" model.subject SetSubject model.subjectError
+        , viewTextArea "Észrevétel" model.message SetMessage model.messageError
         , div [ class "field is-grouped" ]
             [ div [ class "control" ] [ submitButton ]
             , div [ class "control" ] [ backToHomeButton ]
@@ -69,18 +72,23 @@ update : Msg -> Model -> ( ( Model, Cmd Msg ), ExternalMsg )
 update msg model =
     case msg of
         SubmitForm ->
-            case validate model of
-                [] ->
-                    model => send model.user ComplaintRegistered (Request.Complaint.newComplaint model) => NoOp
+            let
+                validatedModel =
+                    validate model
 
-                errors ->
-                    model => Cmd.none => NoOp
+                cmd =
+                    if hasErrors validatedModel then
+                        Cmd.none
+                    else
+                        send model.user ComplaintRegistered (Request.Complaint.newComplaint model)
+            in
+                validatedModel => cmd => NoOp
 
         SetSubject s ->
-            { model | subject = s } => Cmd.none => NoOp
+            { model | subject = s, subjectError = Nothing } => Cmd.none => NoOp
 
         SetMessage msg ->
-            { model | message = msg } => Cmd.none => NoOp
+            { model | message = msg, messageError = Nothing } => Cmd.none => NoOp
 
         ComplaintRegistered (Err err) ->
             case err of
@@ -94,6 +102,27 @@ update msg model =
             model => Route.modifyUrl (Route.Conversation complaint.id) => NoOp
 
 
-validate : Model -> List Error
+hasErrors : Model -> Bool
+hasErrors model =
+    not <| List.isEmpty <| values [ model.subjectError, model.messageError ]
+
+
+validate : Model -> Model
 validate model =
-    []
+    { model | subjectError = validateSubject model, messageError = validateMessage model }
+
+
+validateSubject : Model -> InputError
+validateSubject model =
+    if String.isEmpty model.subject then
+        Just "A tárgy mező nem lehet üres."
+    else
+        Nothing
+
+
+validateMessage : Model -> InputError
+validateMessage model =
+    if String.isEmpty model.message then
+        Just "Az üzenet nem lehet üres."
+    else
+        Nothing

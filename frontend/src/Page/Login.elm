@@ -127,8 +127,8 @@ viewHero model =
 viewForm : Model -> Html Msg
 viewForm model =
     form [ class "form-group row", onSubmit SubmitForm ]
-        [ viewTextField { id = "username", label = "Felhasználónév", value = model.username, msg = SetUsername }
-        , viewPasswordField { id = "password", label = "Jelszó", value = model.password, msg = SetPassword }
+        [ viewTextField "Felhasználónév" model.username SetUsername Nothing
+        , viewPasswordField "Jelszó" model.password SetPassword Nothing
         , div [ class "field" ]
             [ div [ class "control" ]
                 [ button [ class "button is-primary is-fullwidth is-large is-outlined" ] [ text "Bejelentkezés" ] ]

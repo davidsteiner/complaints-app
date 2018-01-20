@@ -1,36 +1,70 @@
-module Views.Input exposing (viewEmailField, viewPasswordField, viewTextArea, viewTextField)
+module Views.Input exposing (InputError, viewEmailField, viewPasswordField, viewTextArea, viewTextField)
 
-import Html exposing (div, Html, input, label, text, textarea)
-import Html.Attributes exposing (class, id, maxlength, type_, value)
+import Html exposing (div, Html, input, label, p, text, textarea)
+import Html.Attributes exposing (class, maxlength, type_, value)
 import Html.Events exposing (onInput)
+import Maybe.Extra exposing (isNothing)
 
 
-viewTextField : { id : String, label : String, value : String, msg : String -> msg } -> Html msg
-viewTextField { id, label, value, msg } =
-    viewField_ { id_ = id, label_ = label, inputType = "text", inputClass = "input is-large", inputValue = value, msg = msg }
+buildInputClass : String -> InputError -> String
+buildInputClass baseClass error =
+    if isNothing error then
+        baseClass
+    else
+        baseClass ++ " is-warning"
 
 
-viewPasswordField : { id : String, label : String, value : String, msg : String -> msg } -> Html msg
-viewPasswordField { id, label, value, msg } =
-    viewField_ { id_ = id, label_ = label, inputType = "password", inputClass = "input is-large password-input", inputValue = value, msg = msg }
+errorLabel : InputError -> Html msg
+errorLabel error =
+    case error of
+        Nothing ->
+            text ""
+
+        Just errorString ->
+            p [ class "help is-dark" ] [ text errorString ]
 
 
-viewEmailField : { id : String, label : String, value : String, msg : String -> msg } -> Html msg
-viewEmailField { id, label, value, msg } =
-    viewField_ { id_ = id, label_ = label, inputType = "email", inputClass = "input is-large email-input", inputValue = value, msg = msg }
+viewTextField : String -> String -> (String -> msg) -> InputError -> Html msg
+viewTextField =
+    viewField "text" Nothing
 
 
-viewField_ : { id_ : String, label_ : String, inputType : String, inputClass : String, inputValue : String, msg : String -> msg } -> Html msg
-viewField_ { id_, label_, inputType, inputClass, inputValue, msg } =
+viewPasswordField : String -> String -> (String -> msg) -> InputError -> Html msg
+viewPasswordField =
+    viewField "password" (Just "password-input")
+
+
+viewEmailField : String -> String -> (String -> msg) -> InputError -> Html msg
+viewEmailField =
+    viewField "email" (Just "email-input")
+
+
+viewField : String -> Maybe String -> String -> String -> (String -> msg) -> InputError -> Html msg
+viewField inputType extraClass label_ inputValue msg error =
+    let
+        inputClass =
+            case extraClass of
+                Nothing ->
+                    buildInputClass "input is-large" error
+
+                Just extra ->
+                    (buildInputClass "input is-large" error) ++ " " ++ extra
+    in
+        div [ class "field" ]
+            [ label [ class "label" ] [ text label_ ]
+            , input [ maxlength 30, type_ inputType, class inputClass, onInput msg, value inputValue ] []
+            , errorLabel error
+            ]
+
+
+viewTextArea : String -> String -> (String -> msg) -> InputError -> Html msg
+viewTextArea label_ val msg error =
     div [ class "field" ]
         [ label [ class "label" ] [ text label_ ]
-        , input [ id id_, maxlength 30, type_ inputType, class inputClass, onInput msg, value inputValue ] []
+        , div [ class "control" ] [ textarea [ class <| buildInputClass "textarea" error, value val, onInput msg ] [] ]
+        , errorLabel error
         ]
 
 
-viewTextArea : { label_ : String, val : String, msg : String -> msg } -> Html msg
-viewTextArea { label_, val, msg } =
-    div [ class "field" ]
-        [ label [ class "label" ] [ text label_ ]
-        , div [ class "control" ] [ textarea [ class "textarea", value val, onInput msg ] [] ]
-        ]
+type alias InputError =
+    Maybe String
