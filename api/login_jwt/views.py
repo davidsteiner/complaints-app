@@ -1,3 +1,4 @@
+from calendar import timegm
 from datetime import datetime
 from django.contrib.auth.models import User
 import logging
@@ -15,7 +16,8 @@ def jwt_payload_hander(user):
     return {
         'username': user.username,
         'exp': datetime.utcnow() + api_settings.JWT_EXPIRATION_DELTA,
-        'is_staff': user.is_staff
+        'is_staff': user.is_staff,
+        'orig_iat': timegm(datetime.utcnow().utctimetuple())
     }
 
 
