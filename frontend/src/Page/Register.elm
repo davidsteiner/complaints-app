@@ -1,6 +1,7 @@
 module Page.Register exposing (ExternalMsg(..), initialModel, Model, Msg, update, view)
 
 import Data.User as User exposing (Username, Session)
+import Dict
 import Html exposing (a, button, div, form, Html, h2, section, text)
 import Html.Attributes exposing (class, id)
 import Html.Events exposing (onClick, onSubmit)
@@ -73,10 +74,13 @@ update msg model =
                 errorMessage =
                     case error of
                         Http.BadStatus response ->
-                            "Sikertelen regisztráció"
+                            if response.status.code == 400 then
+                                "Sikertelen regisztráció"
+                            else
+                                "Váratlan hiba a regisztrációban"
 
                         _ ->
-                            "Váratlan hiba a regisztrációban"
+                            "Szerver nem elérhető"
             in
                 { model | serverError = Just errorMessage } => Cmd.none => NoOp
 

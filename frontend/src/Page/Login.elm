@@ -69,10 +69,14 @@ update msg model =
                 errorMessage =
                     case error of
                         Http.BadStatus response ->
-                            "Hibás felhasználónév vagy jelszó"
+                            if response.status.code == 400 then
+                                "Hibás felhasználónév vagy jelszó"
+                                    |> Debug.log response.body
+                            else
+                                "Váratlan hiba a bejelentkezésben"
 
                         _ ->
-                            "Váratlan hiba a bejelentkezésben"
+                            "Szerver elérhetetlen"
             in
                 { model | serverError = Just errorMessage } => Cmd.none => NoOp
 
