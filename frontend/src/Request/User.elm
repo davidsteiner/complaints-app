@@ -41,14 +41,15 @@ login { username, password } =
             |> Http.post (apiUrl "/api-token-auth/") body
 
 
-register : { r | username : String, password : String, email : String } -> Http.Request Username
-register { username, password, email } =
+register : { r | username : String, password : String, email : String, registrationToken : String } -> Http.Request Username
+register { username, password, email, registrationToken } =
     let
         user =
             Encode.object
                 [ ( "username", Encode.string username )
                 , ( "password", Encode.string password )
                 , ( "email", Encode.string email )
+                , ( "regtoken", Encode.string registrationToken )
                 ]
 
         body =

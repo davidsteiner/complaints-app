@@ -20,6 +20,7 @@ type alias Model =
     , confirmPassword : String
     , email : String
     , serverError : InputError
+    , registrationToken : String
     }
 
 
@@ -29,6 +30,7 @@ type Msg
     | SetPassword String
     | SetConfirmPassword String
     | SetEmail String
+    | SetRegistrationToken String
     | ClearServerError
     | RegisterCompleted (Result Http.Error Username)
 
@@ -45,6 +47,7 @@ initialModel =
     , confirmPassword = ""
     , email = ""
     , serverError = Nothing
+    , registrationToken = ""
     }
 
 
@@ -69,6 +72,9 @@ update msg model =
         SetEmail email ->
             { model | email = email } => Cmd.none => NoOp
 
+        SetRegistrationToken token ->
+            { model | registrationToken = token } => Cmd.none => NoOp
+
         RegisterCompleted (Err error) ->
             let
                 errorMessage =
@@ -76,6 +82,8 @@ update msg model =
                         Http.BadStatus response ->
                             if response.status.code == 400 then
                                 "Sikertelen regisztráció"
+                            else if response.status.code == 401 then
+                                "Helytelen regisztrációs kód"
                             else
                                 "Váratlan hiba a regisztrációban"
 
@@ -140,6 +148,7 @@ viewForm model =
         , viewEmailField "Email (opcionális)" model.email SetEmail (validateEmail model)
         , viewPasswordField "Jelszó" model.password SetPassword (validatePassword model)
         , viewPasswordField "Jelszó megerősítése" model.confirmPassword SetConfirmPassword (validateConfirmPassword model)
+        , viewPasswordField "Regisztrációs kód" model.registrationToken SetRegistrationToken Nothing
         , div [ class "field" ]
             [ div [ class "control" ]
                 [ button [ class "button is-primary is-fullwidth is-large is-outlined" ] [ text "Regisztrálás" ] ]

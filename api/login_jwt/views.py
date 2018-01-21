@@ -47,6 +47,10 @@ class Register(APIView):
 
     def post(self, request, format=None):
         serialized = UserSerializer(data=request.data)
+
+        if request.data.pop('regtoken', None) != 'change_this':
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+
         if serialized.is_valid():
             serialized.save()
             logger.info('User registered: %s', serialized.data)

@@ -71,7 +71,6 @@ update msg model =
                         Http.BadStatus response ->
                             if response.status.code == 400 then
                                 "Hibás felhasználónév vagy jelszó"
-                                    |> Debug.log response.body
                             else
                                 "Váratlan hiba a bejelentkezésben"
 
